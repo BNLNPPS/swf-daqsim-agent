@@ -41,3 +41,6 @@ if verbose: print(f'''Schedule description file path: {schedule}''')
 
 import sim # Main simulation module, which contains the Simulator class
 from   sim import *
+# from   sim import Simulator
+
+smltr = Simulator(schedule_f = schedule, verbose=verbose)

@@ -1,0 +1,7 @@
+1:
+  start:  '2032-12-25 14:30:00'
+  mode:   data-taking
+
+2:
+  start:  '2032-12-25 16:30:00'
+  mode:   calibrations

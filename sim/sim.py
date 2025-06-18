@@ -3,8 +3,14 @@ import numpy as np
 import simpy
 import yaml
 
+
+# We'll use datetime to handle the time axis
+# from datetime import datetime
+# dt = datetime.strptime("2023-12-25 14:30:00", "%Y-%m-%d %H:%M:%S")
+
 ###########
 
+# ---
 class Monitor():
     ''' The Monitor class is used to record the time series of the parameters of choice,
         as the simulation is progressing through time steps.
@@ -15,3 +21,13 @@ class Monitor():
         '''
 
         self.buffer = np.zeros(size, dtype=float) # Current data volume in the buffer
+
+# ---
+class Simulator:
+    def __init__(self, schedule_f=None, verbose=False):
+        self.schefule_f = schedule_f
+        self.schefule   = None
+
+    def read_schedule(self):
+        f = open(self.schedule_f, 'r')
+        self.schefule = yaml.safe_load(f)

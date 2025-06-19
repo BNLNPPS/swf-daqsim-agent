@@ -25,9 +25,18 @@ class Monitor():
 # ---
 class Simulator:
     def __init__(self, schedule_f=None, verbose=False):
-        self.schefule_f = schedule_f
-        self.schefule   = None
+        self.schedule_f = schedule_f
+        self.schedule   = None
+
+        self.read_schedule()
 
     def read_schedule(self):
-        f = open(self.schedule_f, 'r')
-        self.schefule = yaml.safe_load(f)
+        try:
+            f = open(self.schedule_f, 'r')
+        except:
+            print(f'''Error opening the schedule file {self.schedule_f}, exiting...''')
+            exit(0)
+
+        self.schedule = yaml.safe_load(f)
+        print(type(self.schedule))
+

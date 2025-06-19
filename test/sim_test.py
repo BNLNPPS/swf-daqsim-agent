@@ -5,16 +5,13 @@
 
 import os
 import sys
-from sys import exit
+from   sys import exit
 import argparse
 
 ##############################################
 parser = argparse.ArgumentParser()
-
 parser.add_argument("-v", "--verbose",  action='store_true',    help="Verbose mode")
 parser.add_argument("-s", "--schedule", type=str,               help='Path to the schedule (YAML)', default='')
-
-
 args    = parser.parse_args()
 
 verbose     = args.verbose
@@ -31,16 +28,11 @@ except:
     daqsim_path = '../'
     sys.path.append(daqsim_path)  # Add parent to path, to enable running locally (also for data)
 
-if verbose: print(f'''Set the Python path: {sys.path}''')
+if verbose:         print(f'''Set the Python path: {sys.path}''')
+if schedule=='':    schedule    = daqsim_path + "config/schedule-default.yml"
+if verbose:         print(f'''Schedule description file path: {schedule}''')
 
-if schedule=='':
-    schedule    = daqsim_path + "/config/schedule-default.yml"
-
-if verbose: print(f'''Schedule description file path: {schedule}''')
-
-
-import sim # Main simulation module, which contains the Simulator class
+# ---
 from   sim import *
-# from   sim import Simulator
 
 smltr = Simulator(schedule_f = schedule, verbose=verbose)

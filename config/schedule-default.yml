@@ -5,3 +5,11 @@
 2:
   start:  '2032-12-25 16:30:00'
   mode:   calibrations
+
+3:
+  start:  '2032-12-25 16:40:00'
+  mode:   data-taking
+
+4:
+  start:  '2032-12-25 22:00:00'
+  mode:   idle

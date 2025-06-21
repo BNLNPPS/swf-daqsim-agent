@@ -7,6 +7,7 @@ import os
 import sys
 from   sys import exit
 import argparse
+import datetime
 
 ##############################################
 parser = argparse.ArgumentParser()
@@ -36,3 +37,9 @@ if verbose:         print(f'''Schedule description file path: {schedule}''')
 from   sim import *
 
 smltr = Simulator(schedule_f = schedule, verbose=verbose)
+smltr.simulate()
+
+# dt = datetime.now()
+# seconds_since_epoch = dt.timestamp()
+# print(int(seconds_since_epoch))
+

@@ -37,8 +37,10 @@ if verbose:         print(f'''Schedule description file path: {schedule}''')
 from   sim import *
 
 smltr = Simulator(schedule_f = schedule, verbose=verbose)
-smltr.simulate()
-
+# smltr.simulate()
+print('---')
+print(smltr.schedule)
+print(smltr.until)
 # dt = datetime.now()
 # seconds_since_epoch = dt.timestamp()
 # print(int(seconds_since_epoch))

@@ -29,11 +29,14 @@ class Monitor():
 class Simulator:
     def __init__(self, schedule_f=None, verbose=False):
         self.schedule_f = schedule_f
-        self.schedule   = None
+        self.verbose    = verbose
+
         self.read_schedule()
 
         self.env = simpy.Environment(initial_time=self.initial_time)
         self.env.process(self.run()) # Set the callback to this class, for simpy
+
+        self.time_axis = None
 
     def read_schedule(self):
         try:
@@ -43,10 +46,14 @@ class Simulator:
             exit(-1)
 
         self.schedule = yaml.safe_load(f)
-        entries = list(self.schedule.keys())
+        points = list(self.schedule.keys())
+        if self.verbose: print(f'''The schedule read from file {self.schedule_f} contains {len(points)} points''')
 
-        first   = self.schedule[entries[0]]
-        last    = self.schedule[entries[-1]]
+        for point in points:
+            self.schedule[point]['ts'] = int(datetime.strptime(self.schedule[point]['start'], dt_fmt).timestamp())
+
+        first   = self.schedule[points[0]]
+        last    = self.schedule[points[-1]]
 
         self.initial_time   = int(datetime.strptime(first['start'], dt_fmt).timestamp())
         self.until          = int(datetime.strptime(last['start'],  dt_fmt).timestamp())

@@ -13,8 +13,8 @@ import datetime
 parser = argparse.ArgumentParser()
 parser.add_argument("-v", "--verbose",  action='store_true',    help="Verbose mode")
 parser.add_argument("-s", "--schedule", type=str,               help='Path to the schedule (YAML)', default='')
-args    = parser.parse_args()
 
+args        = parser.parse_args()
 verbose     = args.verbose
 schedule    = args.schedule
 
@@ -30,7 +30,7 @@ except:
     sys.path.append(daqsim_path)  # Add parent to path, to enable running locally (also for data)
 
 if verbose:         print(f'''Set the Python path: {sys.path}''')
-if schedule=='':    schedule    = daqsim_path + "config/schedule-default.yml"
+if schedule=='':    schedule    = daqsim_path + "config/schedule-rt.yml"
 if verbose:         print(f'''Schedule description file path: {schedule}''')
 
 # ---
@@ -39,8 +39,8 @@ from   sim import *
 smltr = Simulator(schedule_f = schedule, verbose=verbose)
 # smltr.simulate()
 print('---')
-print(smltr.schedule)
-print(smltr.until)
+# print(smltr.schedule)
+# print(smltr.until)
 # dt = datetime.now()
 # seconds_since_epoch = dt.timestamp()
 # print(int(seconds_since_epoch))

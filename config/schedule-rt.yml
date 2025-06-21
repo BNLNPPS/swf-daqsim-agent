@@ -1,0 +1,7 @@
+- mode:     daq
+  duration: 0,0,0,1,0 # weeks, days, hours, minutes, seconds
+
+- mode:     calibrations
+  duration: 0,0,0,1,0 # weeks, days, hours, minutes, seconds
+
+

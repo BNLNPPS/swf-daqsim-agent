@@ -1,17 +1,7 @@
 # foundation packages
 import numpy as np
-import simpy
-import yaml
-import datetime
-
-from   datetime import datetime
-
-# We'll use datetime to handle the time axis
-# from datetime import datetime
-# dt = datetime.strptime("2023-12-25 14:30:00", "%Y-%m-%d %H:%M:%S")
-
-###########
-dt_fmt = '%Y-%m-%d %H:%M:%S'
+import simpy, yaml
+import random
 
 # ---
 class Monitor():
@@ -20,24 +10,24 @@ class Monitor():
     '''
 
     def __init__(self, size=0):
-        ''' Initialize arrays for time series type of data
+        '''
+        Initialize arrays for time series type of data
         '''
 
         self.buffer = np.zeros(size, dtype=float) # Current data volume in the buffer
 
 # ---
-class Simulator:
+class DAQ:
     def __init__(self, schedule_f=None, verbose=False):
         self.schedule_f = schedule_f
         self.verbose    = verbose
 
         self.read_schedule()
 
-        #self.env = simpy.Environment(initial_time=self.initial_time)
-        #self.env.process(self.run()) # Set the callback to this class, for simpy
+
 
         #self.time_axis = None
-
+    # ---
     def read_schedule(self):
         try:
             f = open(self.schedule_f, 'r')
@@ -46,6 +36,62 @@ class Simulator:
             exit(-1)
 
         self.schedule = yaml.safe_load(f)
+
+
+    # ---
+    def get_time(self):
+        """Get current simulation time formatted"""
+        return f"{self.env.now:.1f}s"
+
+    # self.env.run(until=self.until)
+
+    ############################## Simulation code #############################
+    # ---
+
+    def run(self):
+        while True:
+            myT     = int(self.env.now)
+            print(myT)
+            yield self.env.timeout(1)
+    
+    # ---
+    def simulate(self):
+        """ Steeting of the SimPy simulation process, relying on
+            the 'run' method previous set in the SimPy environment"""
+     
+
+        # Create real-time environment (e.g. factor=0.1 means 10x speed, etc)
+        self.env = simpy.rt.RealtimeEnvironment(factor=0.1, strict=False)
+        self.env.process(self.stf_generator())
+
+        # self.env.process(self.run()) # Set the callback to this class, for simpy        self.env.run(until=self.until)
+
+    # ---
+    # Data will be generated here:
+    def stf_generator(self):
+        '''
+        Generate STFs arriving at random intervals
+        '''
+        while True:
+            # Create a new STF process
+            # env.process(stf_process(env))
+        
+            # Wait for next STF (random interval between 1-4 seconds)
+            next_arrival = random.uniform(1, 4)
+            yield env.timeout(next_arrival)
+
+
+# --- ATTIC ---
+# import datetime
+# from   datetime import datetime
+
+
+# We'll use datetime to handle the time axis
+# from datetime import datetime
+# dt = datetime.strptime("2023-12-25 14:30:00", "%Y-%m-%d %H:%M:%S")
+
+###########
+# dt_fmt = '%Y-%m-%d %H:%M:%S'
         # points = list(self.schedule.keys())
         # if self.verbose: print(f'''The schedule read from file {self.schedule_f} contains {len(points)} points''')
 
@@ -57,21 +103,3 @@ class Simulator:
 
         # self.initial_time   = int(datetime.strptime(first['start'], dt_fmt).timestamp())
         # self.until          = int(datetime.strptime(last['start'],  dt_fmt).timestamp())
-
-
-
-# self.env.run(until=self.until)
-
-    ############################## Simulation code #############################
-    # ---
-    def simulate(self):
-        """ Steeting of the SimPy simulation process, relying on
-            the 'run' method previous set in the SimPy environment"""
-     
-        self.env.run(until=self.until)
-
-    def run(self):
-        while True:
-            myT     = int(self.env.now)
-            print(myT)
-            yield self.env.timeout(1)

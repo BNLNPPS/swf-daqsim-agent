@@ -36,8 +36,9 @@ if verbose:         print(f'''Schedule description file path: {schedule}''')
 # ---
 from   sim import *
 
-smltr = Simulator(schedule_f = schedule, verbose=verbose)
-# smltr.simulate()
+daq = DAQ(schedule_f = schedule, verbose=verbose)
+daq.simulate()
+
 print('---')
 # print(smltr.schedule)
 # print(smltr.until)

@@ -11,12 +11,16 @@ import datetime
 parser = argparse.ArgumentParser()
 parser.add_argument("-v", "--verbose",  action='store_true',    help="Verbose mode")
 parser.add_argument("-s", "--schedule", type=str,               help='Path to the schedule (YAML)', default='')
+
 parser.add_argument("-f", "--factor",   type=float,             help='Time factor',                 default=1.0)
+parser.add_argument("-u", "--until",    type=float,             help='The "until" time limit',      default=60.0)
+
 
 args        = parser.parse_args()
 verbose     = args.verbose
 schedule    = args.schedule
 factor      = args.factor
+until       = args.until
 
 # ---
 daqsim_path=''
@@ -39,7 +43,7 @@ if verbose:
 # Python path is set, import the sim package:
 from  sim import *
 
-daq = DAQ(schedule_f = schedule, factor = factor, verbose = verbose)
+daq = DAQ(schedule_f = schedule, until = until, factor = factor, verbose = verbose)
 daq.simulate()
 
 print('---')

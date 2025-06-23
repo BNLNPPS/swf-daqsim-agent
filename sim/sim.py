@@ -18,9 +18,10 @@ class Monitor():
 
 #############################################################################################
 class DAQ:
-    def __init__(self, schedule_f=None, factor=1.0 ,verbose=False):
+    def __init__(self, schedule_f=None, until=60.0, factor=1.0 ,verbose=False):
         self.schedule_f = schedule_f
         self.verbose    = verbose
+        self.until      = until
         self.factor     = factor
 
         self.read_schedule()        #self.time_axis = None
@@ -59,7 +60,7 @@ class DAQ:
         self.env.process(self.stf_generator())
         try:
             # Run simulation for 60 simulation seconds (6 real seconds with factor=0.1)
-            self.env.run(until=60)
+            self.env.run(until=self.until)
         except KeyboardInterrupt:
             print("\nSimulation interrupted by user")
 

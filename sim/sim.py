@@ -3,7 +3,7 @@ import numpy as np
 import simpy, yaml
 import random
 
-# ---
+#############################################################################################
 class Monitor():
     ''' The Monitor class is used to record the time series of the parameters of choice,
         as the simulation is progressing through time steps.
@@ -16,17 +16,15 @@ class Monitor():
 
         self.buffer = np.zeros(size, dtype=float) # Current data volume in the buffer
 
-# ---
+#############################################################################################
 class DAQ:
-    def __init__(self, schedule_f=None, verbose=False):
+    def __init__(self, schedule_f=None, factor=1.0 ,verbose=False):
         self.schedule_f = schedule_f
         self.verbose    = verbose
+        self.factor     = factor
 
-        self.read_schedule()
+        self.read_schedule()        #self.time_axis = None
 
-
-
-        #self.time_axis = None
     # ---
     def read_schedule(self):
         try:
@@ -46,8 +44,8 @@ class DAQ:
     # self.env.run(until=self.until)
 
     ############################## Simulation code #############################
-    # ---
 
+    # ---
     def run(self):
         while True:
             myT     = int(self.env.now)
@@ -56,13 +54,14 @@ class DAQ:
     
     # ---
     def simulate(self):
-        """ Steeting of the SimPy simulation process, relying on
-            the 'run' method previous set in the SimPy environment"""
-     
-
         # Create real-time environment (e.g. factor=0.1 means 10x speed, etc)
-        self.env = simpy.rt.RealtimeEnvironment(factor=0.1, strict=False)
+        self.env = simpy.rt.RealtimeEnvironment(factor=self.factor, strict=False)
         self.env.process(self.stf_generator())
+        try:
+            # Run simulation for 60 simulation seconds (6 real seconds with factor=0.1)
+            self.env.run(until=60)
+        except KeyboardInterrupt:
+            print("\nSimulation interrupted by user")
 
         # self.env.process(self.run()) # Set the callback to this class, for simpy        self.env.run(until=self.until)
 
@@ -76,9 +75,9 @@ class DAQ:
             # Create a new STF process
             # env.process(stf_process(env))
         
-            # Wait for next STF (random interval between 1-4 seconds)
-            next_arrival = random.uniform(1, 4)
-            yield env.timeout(next_arrival)
+            # Wait for next STF (random interval between 1-2 seconds)
+            next_arrival = random.uniform(1, 2)
+            yield self.env.timeout(next_arrival)
 
 
 # --- ATTIC ---

@@ -66,7 +66,10 @@ class DAQ:
         # self.env.process(self.run()) # Set the callback to this class, for simpy        self.env.run(until=self.until)
 
     # ---
-    # Data will be generated here:
+    # Data is generated here
+    # a) generate
+    # b) send a message to inform agents downstream
+    #
     def stf_generator(self):
         '''
         Generate STFs arriving at random intervals
@@ -77,9 +80,12 @@ class DAQ:
         
             # Wait for next STF (random interval between 1-2 seconds)
             next_arrival = random.uniform(1, 2)
+            print(self.get_time())
             yield self.env.timeout(next_arrival)
 
 
+
+###################################################################################################################
 # --- ATTIC ---
 # import datetime
 # from   datetime import datetime

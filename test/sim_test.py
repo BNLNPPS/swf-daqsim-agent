@@ -15,12 +15,17 @@ parser.add_argument("-s", "--schedule", type=str,               help='Path to th
 parser.add_argument("-f", "--factor",   type=float,             help='Time factor',                 default=1.0)
 parser.add_argument("-u", "--until",    type=float,             help='The "until" time limit',      default=60.0)
 
+parser.add_argument("-L", "--low",      type=float,             help='The "low" time limit on STF production',  default=1.0)
+parser.add_argument("-H", "--high",     type=float,             help='The "high" time limit on STF production', default=2.0)
 
 args        = parser.parse_args()
 verbose     = args.verbose
 schedule    = args.schedule
 factor      = args.factor
 until       = args.until
+
+low         = args.low
+high        = args.high
 
 # ---
 daqsim_path=''
@@ -43,7 +48,7 @@ if verbose:
 # Python path is set, import the sim package:
 from  sim import *
 
-daq = DAQ(schedule_f = schedule, until = until, factor = factor, verbose = verbose)
+daq = DAQ(schedule_f = schedule, until = until, factor = factor, low = low, high = high, verbose = verbose)
 daq.simulate()
 
 print('---')

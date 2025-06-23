@@ -18,11 +18,13 @@ class Monitor():
 
 #############################################################################################
 class DAQ:
-    def __init__(self, schedule_f=None, until=60.0, factor=1.0 ,verbose=False):
+    def __init__(self, schedule_f=None, until=60.0, factor=1.0, low=1.0, high=2.0, verbose=False):
         self.schedule_f = schedule_f
         self.verbose    = verbose
         self.until      = until
         self.factor     = factor
+        self.low        = low
+        self.high       = high
 
         self.read_schedule()        #self.time_axis = None
 
@@ -80,7 +82,7 @@ class DAQ:
             # env.process(stf_process(env))
         
             # Wait for next STF (random interval between 1-2 seconds)
-            next_arrival = random.uniform(1, 2)
+            next_arrival = random.uniform(self.low, self.high)
             print(self.get_time())
             yield self.env.timeout(next_arrival)
 

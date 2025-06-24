@@ -20,9 +20,11 @@ class Monitor():
 
 ###################################################################################
 class DAQ:
-    def __init__(self, schedule_f=None, until=60.0, clock=1.0, factor=1.0, low=1.0, high=2.0, verbose=False):
-        self.schedule_f = schedule_f    # filename
-        self.schedule   = None          # the actual schefule dict, to be filled later
+    def __init__(self, schedule_f=None, until=None, clock=1.0, factor=1.0, low=1.0, high=2.0, verbose=False):
+        self.state      = None          # current state of the DAQ, undergoes changes in time
+        self.schedule_f = schedule_f    # filename, of the YAML definition of the schefule
+        self.schedule   = None          # the actual schedule (a dictionary), to be filled later
+        self.index      = 0             # current index into the schedule
         self.verbose    = verbose
         self.until      = until         # total duration of the sim
         self.clock      = clock         # scheduler clock
@@ -30,6 +32,7 @@ class DAQ:
         self.low        = low           # low limit on the STF prod time
         self.high       = high          # high limit on same
         self.points     = []            # state switch points
+        self.end        = 0.0           # to be updated -- the end of the defined schedule
 
         self.read_schedule()
 
@@ -44,17 +47,25 @@ class DAQ:
         self.schedule = yaml.safe_load(f)
 
         # Start populating the array of scheduling points:
-        self.points.append(0.0)
-        current = 0.0
+        current = 0.0 # the origin
+        self.points.append(current)
+
         for point in self.schedule:
-            # Example - duration: 0,0,0,1,0 # weeks, days, hours, minutes, seconds
+            # Duration example: 0,0,0,1,0 - weeks, days, hours, minutes, seconds
             x = [int(p) for p in point['duration'].split(',')]
             interval = datetime.timedelta(weeks=x[0], days=x[1], hours=x[2], minutes=x[3], seconds=x[4])
-            if self.verbose: print(point['mode'], interval.total_seconds())
+            if self.verbose: print(point['state'], interval.total_seconds())
             current+=interval.total_seconds()
             self.points.append(current)
 
+        self.state = self.schedule[0]['state']
         print(self.points)
+        self.end = self.points[-1]
+        if self.verbose: print(f'''*** The end of the defined schedule is at {self.end} ***''')
+        if self.until is None:
+            if self.verbose: print(f'''*** Will stop simulation at the end of schedle defined in {self.schedule_f} ***''')
+            self.until = self.end
+
     # ---
     def get_time(self):
         """Get current simulation time formatted"""
@@ -68,8 +79,14 @@ class DAQ:
             myT     = int(self.env.now)
     
             # Find the index
-            index = bisect.bisect_right(self.points, myT)
-            print('sched', myT, index)
+            index = bisect.bisect_right(self.points, myT) - 1
+            if index!=self.index:
+                if index<len(self.schedule):
+                    self.index=index
+                    self.state=self.schedule[index]['state']
+                else:
+                    pass
+            print('sched, state', myT, index, self.state)
             yield self.env.timeout(self.clock)
     
     # ---

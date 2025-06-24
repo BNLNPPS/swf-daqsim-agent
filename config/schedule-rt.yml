@@ -1,11 +1,11 @@
-- mode:     daq
+- state:     daq
   duration: 0,0,0,10,0 # weeks, days, hours, minutes, seconds
 
-- mode:     cal
+- state:     cal
   duration: 0,0,0,1,0 # weeks, days, hours, minutes, seconds
 
-- mode:     daq
+- state:     daq
   duration: 0,0,0,10,0 # weeks, days, hours, minutes, seconds
 
-- mode:     cal
+- state:     cal
   duration: 0,0,0,1,0 # weeks, days, hours, minutes, seconds

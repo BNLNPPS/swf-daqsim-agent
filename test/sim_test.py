@@ -49,7 +49,7 @@ if verbose:
 from  sim import *
 
 daq = DAQ(schedule_f = schedule, until = until, factor = factor, low = low, high = high, verbose = verbose)
-daq.simulate()
+# daq.simulate()
 
 print('---')
 # print(smltr.schedule)

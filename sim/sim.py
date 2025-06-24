@@ -3,6 +3,7 @@ import numpy as np
 import simpy, yaml
 import random
 import datetime
+import bisect
 
 ###################################################################################
 class Monitor():
@@ -19,16 +20,18 @@ class Monitor():
 
 ###################################################################################
 class DAQ:
-    def __init__(self, schedule_f=None, until=60.0, factor=1.0, low=1.0, high=2.0, verbose=False):
-        self.schedule_f = schedule_f
+    def __init__(self, schedule_f=None, until=60.0, clock=1.0, factor=1.0, low=1.0, high=2.0, verbose=False):
+        self.schedule_f = schedule_f    # filename
+        self.schedule   = None          # the actual schefule dict, to be filled later
         self.verbose    = verbose
-        self.until      = until
-        self.factor     = factor
-        self.low        = low
-        self.high       = high
-        self.points     = {}
+        self.until      = until         # total duration of the sim
+        self.clock      = clock         # scheduler clock
+        self.factor     = factor        # real-time scaling factor
+        self.low        = low           # low limit on the STF prod time
+        self.high       = high          # high limit on same
+        self.points     = []            # state switch points
 
-        self.read_schedule()        #self.time_axis = None
+        self.read_schedule()
 
     # ---
     def read_schedule(self):
@@ -40,38 +43,41 @@ class DAQ:
 
         self.schedule = yaml.safe_load(f)
 
-        ts_now = datetime.datetime.now().timestamp()
-
+        # Start populating the array of scheduling points:
+        self.points.append(0.0)
+        current = 0.0
         for point in self.schedule:
             # Example - duration: 0,0,0,1,0 # weeks, days, hours, minutes, seconds
             x = [int(p) for p in point['duration'].split(',')]
-            print(x)
-
             interval = datetime.timedelta(weeks=x[0], days=x[1], hours=x[2], minutes=x[3], seconds=x[4])
-            print(interval.total_seconds())
+            if self.verbose: print(point['mode'], interval.total_seconds())
+            current+=interval.total_seconds()
+            self.points.append(current)
 
-
+        print(self.points)
     # ---
     def get_time(self):
         """Get current simulation time formatted"""
         return f"{self.env.now:.1f}s"
 
-    # self.env.run(until=self.until)
-
     ############################################################################
     ############################## Simulation code #############################
     # ---
-    def run(self):
+    def sched(self): # keeps track of the state as defined in the schedule
         while True:
             myT     = int(self.env.now)
-            print(myT)
-            yield self.env.timeout(1)
+    
+            # Find the index
+            index = bisect.bisect_right(self.points, myT)
+            print('sched', myT, index)
+            yield self.env.timeout(self.clock)
     
     # ---
     def simulate(self):
         # Create real-time environment (e.g. factor=0.1 means 10x speed, etc)
         self.env = simpy.rt.RealtimeEnvironment(factor=self.factor, strict=False)
-        self.env.process(self.stf_generator()) # what callback to process in each step
+        self.env.process(self.sched()) # the schedule minder
+        self.env.process(self.stf_generator()) # the DAQ payload to process in each step
         try:
             self.env.run(until=self.until)
         except KeyboardInterrupt:
@@ -90,7 +96,7 @@ class DAQ:
       
             # Wait for next STF (random interval between the low and high limits)
             next_arrival = random.uniform(self.low, self.high)
-            print(self.get_time())
+            # print(self.get_time())
             yield self.env.timeout(next_arrival)
 
 
@@ -121,3 +127,13 @@ class DAQ:
 
 # SimPy:
 # self.env.process(self.run()) # Set the callback to this class, for simpy        self.env.run(until=self.until)
+
+# ts_now = datetime.datetime.now().timestamp()
+# if self.verbose : print(f'''*** Initializing at {ts_now} ***''')
+
+# Timestamp, if needed
+# print(smltr.schedule)
+# print(smltr.until)
+# dt = datetime.now()
+# seconds_since_epoch = dt.timestamp()
+# print(int(seconds_since_epoch))

@@ -14,6 +14,7 @@ parser.add_argument("-s", "--schedule", type=str,               help='Path to th
 
 parser.add_argument("-f", "--factor",   type=float,             help='Time factor',                 default=1.0)
 parser.add_argument("-u", "--until",    type=float,             help='The "until" time limit',      default=60.0)
+parser.add_argument("-c", "--clock",    type=float,             help='Schedular clock (granularity in seconds)', default=1.0)
 
 parser.add_argument("-L", "--low",      type=float,             help='The "low" time limit on STF production',  default=1.0)
 parser.add_argument("-H", "--high",     type=float,             help='The "high" time limit on STF production', default=2.0)
@@ -23,6 +24,7 @@ verbose     = args.verbose
 schedule    = args.schedule
 factor      = args.factor
 until       = args.until
+clock       = args.clock
 
 low         = args.low
 high        = args.high
@@ -48,13 +50,10 @@ if verbose:
 # Python path is set, import the sim package:
 from  sim import *
 
-daq = DAQ(schedule_f = schedule, until = until, factor = factor, low = low, high = high, verbose = verbose)
-# daq.simulate()
+daq = DAQ(schedule_f = schedule, until = until, clock = clock, factor = factor, low = low, high = high, verbose = verbose)
+daq.simulate()
 
 print('---')
-# print(smltr.schedule)
-# print(smltr.until)
-# dt = datetime.now()
-# seconds_since_epoch = dt.timestamp()
-# print(int(seconds_since_epoch))
+if verbose: print(f'''*** Completed at {daq.get_time()} ***''')
+
 

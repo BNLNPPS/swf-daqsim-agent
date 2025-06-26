@@ -54,6 +54,6 @@ daq = DAQ(schedule_f = schedule, until = until, clock = clock, factor = factor, 
 daq.simulate()
 
 print('---')
-if verbose: print(f'''*** Completed at {daq.get_time()} ***''')
+if verbose: print(f'''*** Completed at {daq.get_time()}. Number of STFs generated: {daq.Nstf} ***''')
 
 

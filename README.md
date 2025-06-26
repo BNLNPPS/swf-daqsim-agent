@@ -44,7 +44,7 @@ to 0.0 on the time axis.
 The critical part of the simulation is the process of state transitions in the DAQ.
 For simulation purposes, we define "schedule" as a list of points on the timeline,
 with assigned states (and possibly sub-states to be added later). The points are
-defined as tuples of (weeks, days, hours, minutes, seconds) for ease of human interaction
+defined as tuples of **(weeks, days, hours, minutes, seconds)** for ease of human interaction
 but internally these data are converted to seconds (as floats). A dedicated method
 in the simulator class keeps watch of the states and actuates transitions.
 

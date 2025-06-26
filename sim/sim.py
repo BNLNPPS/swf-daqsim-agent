@@ -5,6 +5,8 @@ import random
 import datetime
 import bisect
 
+from datetime import datetime as dt
+
 ###################################################################################
 class Monitor():
     ''' The Monitor class is used to record the time series of the parameters of choice,
@@ -34,6 +36,7 @@ class DAQ:
         self.high       = high          # high limit on same
         self.points     = []            # state switch points
         self.end        = 0.0           # to be updated -- the end of the defined schedule
+        self.Nstf       = 0             # counter of the generated STFs
 
         self.read_schedule()
 
@@ -77,21 +80,19 @@ class DAQ:
         return f"{self.env.now:.1f}s"
 
     ############################################################################
-    ############################## Simulation code #############################
+    ########################### Core Simulation code ###########################
     # ---
-    def sched(self): # keeps track of the state as defined in the schedule
+    def sched(self): # keeps track of the state changes as defined in the schedule
         while True:
             myT     = int(self.env.now)
-    
-            # Find the index
-            index = bisect.bisect_right(self.points, myT) - 1
+            index = bisect.bisect_right(self.points, myT) - 1 # Find the index of the current schedule entry
             if index!=self.index:
-                if index<len(self.schedule):
+                if index<len(self.schedule): # state/substate transition
                     self.index=index
                     self.state=self.schedule[index]['state']
                     self.subst=self.schedule[index]['subst']
                 else:
-                    pass
+                    pass # past the last point, just keep rolling
 
             if self.verbose: print(f'''*** Time: {myT}, index: {index}, state: {self.state}, substate: {self.subst} ''')
 
@@ -118,11 +119,19 @@ class DAQ:
         Generate STFs arriving at random intervals
         '''
         while True:
-      
-            # Wait for next STF (random interval between the low and high limits)
-            next_arrival = random.uniform(self.low, self.high)
+            # The filename template: swf.20250625.<integer>.<state>.<substate>.stf
+
+            stf_arrival = random.uniform(self.low, self.high)   # Time for next STF (random interval between the low/high limits)
+            
+            now = dt.now()                                      # Get the current datetime
+            formatted_date = now.strftime("%Y%m%d")             # ("%Y-%m-%d %H:%M:%S")
+            formatted_time = now.strftime("%H%M%S")
+
+            filename = f'''swf.{formatted_date}.{formatted_time}.{self.state}.{self.subst}.stf'''
+            print(f"Filename: {filename}")
+            self.Nstf+=1
             # print(self.get_time())
-            yield self.env.timeout(next_arrival)
+            yield self.env.timeout(stf_arrival)
 
 
 

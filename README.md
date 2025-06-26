@@ -1,5 +1,7 @@
 # ePIC streaming computing testbed: the DAQ agent simulator
 
+---
+
 ## About
 * __Work Title__: _swf-daqsim-agent_
 * __Purpose__: To simulate the state machine of the ePIC DAQ, including its components interacting
@@ -7,11 +9,26 @@ with the data management, prompt processing and ast monitoring systems.
 * __Tools__: We use _SimPy_ which appears to be well suited for the task. It's a discrete event
 simulation framework written in Python.
 
+In terms of interaction with other components, the two principal modes taking
+place simultaneously are:
+
+* Mock-up data representing the STF files
+* Messages sent to other agents via MQ, to trigger the overall orchestration
+of data distribution and processing.
+
+The working version of the file names is as follows:
+
+```
+swf.20250625.<integer>.<state>.<substate>.stf
+```
+
+---
 
 ## The Simulation
 
-At the time of writing, the prototype driver script *sim_test.py* is located in the
-folder **test**,
+At the time of writing, the prototype aimulation driver script *sim_test.py* is located in the
+folder **test**. It has equipped with a comprehensive set of CLI options. The "--help"
+option will output the available parameters.
 
 ### Time handling
 

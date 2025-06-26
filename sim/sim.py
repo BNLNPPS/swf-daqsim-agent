@@ -22,6 +22,7 @@ class Monitor():
 class DAQ:
     def __init__(self, schedule_f=None, until=None, clock=1.0, factor=1.0, low=1.0, high=2.0, verbose=False):
         self.state      = None          # current state of the DAQ, undergoes changes in time
+        self.subst      = None          # current substate of the DAQ, undergoes changes in time
         self.schedule_f = schedule_f    # filename, of the YAML definition of the schefule
         self.schedule   = None          # the actual schedule (a dictionary), to be filled later
         self.index      = 0             # current index into the schedule
@@ -51,16 +52,20 @@ class DAQ:
         self.points.append(current)
 
         for point in self.schedule:
-            # Duration example: 0,0,0,1,0 - weeks, days, hours, minutes, seconds
-            x = [int(p) for p in point['duration'].split(',')]
+            # span example: 0,0,0,1,0 - weeks, days, hours, minutes, seconds
+            x = [int(p) for p in point['span'].split(',')]
             interval = datetime.timedelta(weeks=x[0], days=x[1], hours=x[2], minutes=x[3], seconds=x[4])
             if self.verbose: print(point['state'], interval.total_seconds())
             current+=interval.total_seconds()
             self.points.append(current)
 
         self.state = self.schedule[0]['state']
-        print(self.points)
+        self.subst = self.schedule[0]['subst']
+
+        # print(self.points)
+
         self.end = self.points[-1]
+
         if self.verbose: print(f'''*** The end of the defined schedule is at {self.end} ***''')
         if self.until is None:
             if self.verbose: print(f'''*** Will stop simulation at the end of schedle defined in {self.schedule_f} ***''')
@@ -84,9 +89,12 @@ class DAQ:
                 if index<len(self.schedule):
                     self.index=index
                     self.state=self.schedule[index]['state']
+                    self.subst=self.schedule[index]['subst']
                 else:
                     pass
-            print('sched, state', myT, index, self.state)
+
+            if self.verbose: print(f'''*** Time: {myT}, index: {index}, state: {self.state}, substate: {self.subst} ''')
+
             yield self.env.timeout(self.clock)
     
     # ---

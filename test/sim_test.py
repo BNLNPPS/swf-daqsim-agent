@@ -13,7 +13,7 @@ parser.add_argument("-v", "--verbose",  action='store_true',    help="Verbose mo
 parser.add_argument("-s", "--schedule", type=str,               help='Path to the schedule (YAML)', default='')
 
 parser.add_argument("-f", "--factor",   type=float,             help='Time factor',                 default=1.0)
-parser.add_argument("-u", "--until",    type=float,             help='The "until" time limit, if undefined will run till end of schedule', default=-1.0, required=False, nargs='?')
+parser.add_argument("-u", "--until",    type=float,             help='The "until" time limit, if undefined will run till end of schedule', required=False, nargs='?')
 parser.add_argument("-c", "--clock",    type=float,             help='Schedular clock (granularity in seconds)', default=1.0)
 
 parser.add_argument("-L", "--low",      type=float,             help='The "low" time limit on STF production',  default=1.0)

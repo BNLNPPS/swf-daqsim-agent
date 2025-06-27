@@ -84,6 +84,17 @@ class DAQ:
     ############################################################################
     ########################### Core Simulation code ###########################
     # ---
+    def simulate(self):
+        # Create real-time environment (e.g. factor=0.1 means 10x speed, etc)
+        self.env = simpy.rt.RealtimeEnvironment(factor=self.factor, strict=False)
+        self.env.process(self.sched()) # the schedule minder
+        self.env.process(self.stf_generator()) # the DAQ payload to process in each step
+        try:
+            self.env.run(until=self.until)
+        except KeyboardInterrupt:
+            print("\nSimulation interrupted by user")
+
+    # ---
     def sched(self): # keeps track of the state changes as defined in the schedule
         while True:
             myT     = int(self.env.now)
@@ -96,22 +107,12 @@ class DAQ:
                 else:
                     pass # past the last point, just keep rolling
 
-            if self.verbose: print(f'''*** Time: {myT}, index: {index}, state: {self.state}, substate: {self.subst} ''')
+            # if self.verbose: print(f'''*** Time: {myT}, index: {index}, state: {self.state}, substate: {self.subst} ''')
 
             yield self.env.timeout(self.clock)
     
     # ---
-    def simulate(self):
-        # Create real-time environment (e.g. factor=0.1 means 10x speed, etc)
-        self.env = simpy.rt.RealtimeEnvironment(factor=self.factor, strict=False)
-        self.env.process(self.sched()) # the schedule minder
-        self.env.process(self.stf_generator()) # the DAQ payload to process in each step
-        try:
-            self.env.run(until=self.until)
-        except KeyboardInterrupt:
-            print("\nSimulation interrupted by user")
-
-    # ---
+    # 
     # Data is generated here:
     # a) generate
     # b) send a message to inform various gents downstream
@@ -121,16 +122,22 @@ class DAQ:
         Generate STFs arriving at random intervals
         '''
         while True:
-            # The filename template: swf.20250625.<integer>.<state>.<substate>.stf
 
+            build_start = dt.now() # .strftime("%Y%m%d%H%M%S")
             stf_arrival = random.uniform(self.low, self.high)   # Time for next STF (random interval between the low/high limits)
-            
-            now = dt.now()                                      # Get the current datetime
-            formatted_date = now.strftime("%Y%m%d")             # ("%Y-%m-%d %H:%M:%S")
-            formatted_time = now.strftime("%H%M%S")
+            interval    = datetime.timedelta(seconds=stf_arrival)
+            build_end   = build_start+interval
 
+            formatted_date = build_end.strftime("%Y%m%d")             # ("%Y-%m-%d %H:%M:%S")
+            formatted_time = build_end.strftime("%H%M%S")
+
+            print(build_start.strftime("%Y%m%d%H%M%S"), build_end.strftime("%Y%m%d%H%M%S"))
+
+            # The filename template: swf.20250625.<integer>.<state>.<substate>.stf
             filename = f'''swf.{formatted_date}.{formatted_time}.{self.state}.{self.subst}.stf'''
-            print(f"Filename: {filename}")
+            # ---
+            # print(f"Filename: {filename}")
+            # ---
             self.Nstf+=1
             # print(self.get_time())
             yield self.env.timeout(stf_arrival)

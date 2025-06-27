@@ -10,11 +10,11 @@ import datetime
 ##############################################
 parser = argparse.ArgumentParser()
 parser.add_argument("-v", "--verbose",  action='store_true',    help="Verbose mode")
-parser.add_argument("-s", "--schedule", type=str,               help='Path to the schedule (YAML)', default='')
+parser.add_argument("-s", "--schedule", type=str,               help='Path to the schedule (YAML)',             default='')
 
-parser.add_argument("-f", "--factor",   type=float,             help='Time factor',                 default=1.0)
-parser.add_argument("-u", "--until",    type=float,             help='The "until" time limit, if undefined will run till end of schedule', required=False, nargs='?')
-parser.add_argument("-c", "--clock",    type=float,             help='Schedular clock (granularity in seconds)', default=1.0)
+parser.add_argument("-f", "--factor",   type=float,             help='Time factor',                             default=1.0)
+parser.add_argument("-u", "--until",    type=float,             help='The limit, if undefined: end of schedule',default=None) #  required=False, nargs='?')
+parser.add_argument("-c", "--clock",    type=float,             help='Scheduler clock freq(seconds)',           default=1.0)
 
 parser.add_argument("-L", "--low",      type=float,             help='The "low" time limit on STF production',  default=1.0)
 parser.add_argument("-H", "--high",     type=float,             help='The "high" time limit on STF production', default=2.0)

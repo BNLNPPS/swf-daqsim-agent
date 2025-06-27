@@ -6,7 +6,7 @@
   span:   0,0,0,0,10
 
 - state:  beam
-  subst:  not ready
+  subst:  not_ready
   span:   0,0,0,0,10
 
 - state:  beam

@@ -69,10 +69,12 @@ class DAQ:
 
         self.end = self.points[-1]
 
-        if self.verbose: print(f'''*** The end of the defined schedule is at {self.end} ***''')
+        if self.verbose: print(f'''*** The end of the defined schedule is at {self.end}s ***''')
         if self.until is None:
             if self.verbose: print(f'''*** Will stop simulation at the end of schedle defined in {self.schedule_f} ***''')
             self.until = self.end
+        else:
+            if self.verbose: print(f'''*** Will run simulation until {self.until}s per command line options***''')
 
     # ---
     def get_time(self):

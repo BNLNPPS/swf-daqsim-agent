@@ -81,6 +81,11 @@ class DAQ:
         """Get current simulation time formatted"""
         return f"{self.env.now:.1f}s"
 
+
+    # ---
+    def metadata(self, start, end):
+        pass
+    
     ############################################################################
     ########################### Core Simulation code ###########################
     # ---

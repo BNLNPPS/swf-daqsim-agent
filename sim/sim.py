@@ -4,8 +4,8 @@ import simpy, yaml
 import random
 import datetime
 import bisect
-
-from datetime import datetime as dt
+import json
+from   datetime import datetime as dt
 
 ###################################################################################
 class Monitor():
@@ -84,7 +84,14 @@ class DAQ:
 
     # ---
     def metadata(self, start, end):
-        pass
+        md ={
+                'start':    start.strftime("%Y%m%d%H%M%S"),
+                'end':      end.strftime("%Y%m%d%H%M%S"),
+                'state':    self.state,
+                'subst':    self.subst
+            }
+        return md
+
     
     ############################################################################
     ########################### Core Simulation code ###########################
@@ -133,10 +140,13 @@ class DAQ:
             interval    = datetime.timedelta(seconds=stf_arrival)
             build_end   = build_start+interval
 
+            md = self.metadata(build_start, build_end)
+            print(json.dumps(md))
+
             formatted_date = build_end.strftime("%Y%m%d")             # ("%Y-%m-%d %H:%M:%S")
             formatted_time = build_end.strftime("%H%M%S")
 
-            print(build_start.strftime("%Y%m%d%H%M%S"), build_end.strftime("%Y%m%d%H%M%S"))
+            # print(build_start.strftime("%Y%m%d%H%M%S"), build_end.strftime("%Y%m%d%H%M%S"))
 
             # The filename template: swf.20250625.<integer>.<state>.<substate>.stf
             filename = f'''swf.{formatted_date}.{formatted_time}.{self.state}.{self.subst}.stf'''

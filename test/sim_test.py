@@ -48,7 +48,7 @@ if verbose:
 
 # ---
 # Python path is set, import the sim package:
-from  sim import *
+from  daq import *
 
 daq = DAQ(schedule_f = schedule, until = until, clock = clock, factor = factor, low = low, high = high, verbose = verbose)
 daq.simulate()

@@ -1,3 +1,6 @@
+docopt==0.6.2
 numpy==2.3.0
 PyYAML==6.0.2
 simpy==4.1.1
+stomp.py==8.2.0
+websocket-client==1.8.0

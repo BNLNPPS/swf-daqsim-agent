@@ -41,14 +41,27 @@ except:
     sys.path.append(daqsim_path)  # Add parent to path, to enable running locally (also for data)
 
 if verbose:         print(f'''*** Set the Python path: {sys.path} ***''')
-if schedule=='':    schedule    = daqsim_path + "config/schedule-rt.yml"
+if schedule=='':    schedule    = daqsim_path + "/config/schedule-rt.yml"
 if verbose:
     print(f'''*** Schedule description file path: {schedule} ***''')
     print(f'''*** Simulation time factor: {factor} ***''')
 
 # ---
-# Python path is set, import the sim package:
-from  daq import *
+try:
+    from daq import *
+    if verbose:
+        print(f'''*** PYTHONPATH contains the daq package, will use it ***''')
+except:
+    print('*** PYTHONPATH does not contain the daq package, exiting...***')
+    exit(-1)
+
+try:
+    from comms import *
+    if verbose:
+        print(f'''*** PYTHONPATH contains the comms package, will use it ***''')
+except:
+    print('*** PYTHONPATH does not contain the comms package, exiting...***')
+    exit(-1)
 
 daq = DAQ(schedule_f = schedule, until = until, clock = clock, factor = factor, low = low, high = high, verbose = verbose)
 daq.simulate()

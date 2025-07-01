@@ -28,14 +28,14 @@ class DAQ:
         self.schedule_f = schedule_f    # filename, of the YAML definition of the schefule
         self.schedule   = None          # the actual schedule (a dictionary), to be filled later
         self.index      = 0             # current index into the schedule
-        self.verbose    = verbose
+        self.verbose    = verbose       #
         self.until      = until         # total duration of the sim
         self.clock      = clock         # scheduler clock
         self.factor     = factor        # real-time scaling factor
         self.low        = low           # low limit on the STF prod time
         self.high       = high          # high limit on same
         self.points     = []            # state switch points
-        self.end        = 0.0           # to be updated -- the end of the defined schedule
+        self.end        = 0.0           # will be updated -- the last of the points
         self.Nstf       = 0             # counter of the generated STFs
 
         self.read_schedule()
@@ -49,13 +49,11 @@ class DAQ:
             exit(-1)
 
         self.schedule = yaml.safe_load(f)
-
-        # Start populating the array of scheduling points:
-        current = 0.0 # the origin
+        
+        current = 0.0 # the origin: start populating the array of scheduling points
         self.points.append(current)
 
-        for point in self.schedule:
-            # span example: 0,0,0,1,0 - weeks, days, hours, minutes, seconds
+        for point in self.schedule: # span example: 0,0,0,1,0 - weeks, days, hours, minutes, seconds
             x = [int(p) for p in point['span'].split(',')]
             interval = datetime.timedelta(weeks=x[0], days=x[1], hours=x[2], minutes=x[3], seconds=x[4])
             if self.verbose: print(point['state'], interval.total_seconds())
@@ -64,10 +62,7 @@ class DAQ:
 
         self.state = self.schedule[0]['state']
         self.subst = self.schedule[0]['subst']
-
-        # print(self.points)
-
-        self.end = self.points[-1]
+        self.end   = self.points[-1]
 
         if self.verbose: print(f'''*** The end of the defined schedule is at {self.end}s ***''')
         if self.until is None:

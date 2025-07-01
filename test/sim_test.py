@@ -10,6 +10,7 @@ import datetime
 ##############################################
 parser = argparse.ArgumentParser()
 parser.add_argument("-v", "--verbose",  action='store_true',    help="Verbose mode")
+parser.add_argument("-a", "--activemq", action='store_true',    help="Send messages to ActiveMQ",               default=False)
 parser.add_argument("-s", "--schedule", type=str,               help='Path to the schedule (YAML)',             default='')
 
 parser.add_argument("-f", "--factor",   type=float,             help='Time factor',                             default=1.0)
@@ -21,6 +22,11 @@ parser.add_argument("-H", "--high",     type=float,             help='The "high"
 
 args        = parser.parse_args()
 verbose     = args.verbose
+activemq    = args.activemq
+
+if verbose: print(f'''*** Verbose mode is set to {verbose} ***''')
+if verbose: print(f'''*** ActiveMQ mode is set to {activemq} ***''')
+
 schedule    = args.schedule
 factor      = args.factor
 until       = args.until

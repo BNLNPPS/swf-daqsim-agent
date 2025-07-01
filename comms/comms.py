@@ -9,7 +9,7 @@ if daqsim_path not in sys.path: sys.path.append(daqsim_path)
 class Messenger:
     """
     A messenger class for sending and receiving messages using ActiveMQ, for communication
-    with other components in the ePIC straming testbed system.
+    with other components in the ePIC streaming testbed system.
 
     This class provides methods to connect to an ActiveMQ server, send messages,
     subscribe to topics, and receive messages. It uses the `stomp.py` library

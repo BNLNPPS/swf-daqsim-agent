@@ -101,7 +101,8 @@ Kept here to have it close to the code:
    * a catch-all for a great many calib data types, we can start small
    * occurs during states: all (assuming there are cases where calib data is taken during beam on)
 
+## Communications
 
-
+This agent is using ActieMQ to send notifications to the swf-data-agent and other elements of the test bed.
 
 

@@ -17,6 +17,8 @@ parser.add_argument("-f", "--factor",   type=float,             help='Time facto
 parser.add_argument("-u", "--until",    type=float,             help='The limit, if undefined: end of schedule',default=None) #  required=False, nargs='?')
 parser.add_argument("-c", "--clock",    type=float,             help='Scheduler clock freq(seconds)',           default=1.0)
 
+parser.add_argument("-d", "--destination", type=str,            help='Path to the destination folder, if empty do not output data',  default='')
+
 parser.add_argument("-L", "--low",      type=float,             help='The "low" time limit on STF production',  default=1.0)
 parser.add_argument("-H", "--high",     type=float,             help='The "high" time limit on STF production', default=2.0)
 
@@ -28,6 +30,8 @@ if verbose: print(f'''*** Verbose mode is set to {verbose} ***''')
 if verbose: print(f'''*** ActiveMQ mode is set to {activemq} ***''')
 
 schedule    = args.schedule
+destination = args.destination
+
 factor      = args.factor
 until       = args.until
 clock       = args.clock
@@ -45,11 +49,16 @@ except:
     if verbose: print('*** The variable DAQSIM_PATH is undefined, will rely on PYTHONPATH and ../ ***')
     daqsim_path = '../'
     sys.path.append(daqsim_path)  # Add parent to path, to enable running locally (also for data)
-
-if verbose:         print(f'''*** Set the Python path: {sys.path} ***''')
+      
 if schedule=='':    schedule    = daqsim_path + "/config/schedule-rt.yml"
 if verbose:
+    print(f'''*** Set the Python path: {sys.path} ***''')
     print(f'''*** Schedule description file path: {schedule} ***''')
+    if destination=='':
+        print(f'''*** No output destination is set, will not write data ***''')
+    else:  
+        print(f'''*** Output destination is set to: {destination} ***''')
+
     print(f'''*** Simulation time factor: {factor} ***''')
 
 # ---
@@ -69,7 +78,14 @@ except:
     print('*** PYTHONPATH does not contain the comms package, exiting...***')
     exit(-1)
 
-daq = DAQ(schedule_f = schedule, until = until, clock = clock, factor = factor, low = low, high = high, verbose = verbose)
+daq = DAQ(schedule_f    = schedule,
+          destination   = destination,
+          until         = until,
+          clock         = clock,
+          factor        = factor,
+          low           = low,
+          high          = high,
+          verbose       = verbose)
 daq.simulate()
 
 print('---')

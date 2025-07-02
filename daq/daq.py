@@ -22,10 +22,19 @@ class Monitor():
 
 ###################################################################################
 class DAQ:
-    def __init__(self, schedule_f=None, until=None, clock=1.0, factor=1.0, low=1.0, high=2.0, verbose=False):
+    def __init__(self,
+                 schedule_f=None,
+                 destination='',
+                 until=None,
+                 clock=1.0,
+                 factor=1.0,
+                 low=1.0,
+                 high=2.0,
+                 verbose=False):
         self.state      = None          # current state of the DAQ, undergoes changes in time
         self.subst      = None          # current substate of the DAQ, undergoes changes in time
         self.schedule_f = schedule_f    # filename, of the YAML definition of the schefule
+        self.destination= destination   # folder for the output data, if empty do not write
         self.schedule   = None          # the actual schedule (a dictionary), to be filled later
         self.index      = 0             # current index into the schedule
         self.verbose    = verbose       #
@@ -56,7 +65,7 @@ class DAQ:
         for point in self.schedule: # span example: 0,0,0,1,0 - weeks, days, hours, minutes, seconds
             x = [int(p) for p in point['span'].split(',')]
             interval = datetime.timedelta(weeks=x[0], days=x[1], hours=x[2], minutes=x[3], seconds=x[4])
-            if self.verbose: print(point['state'], interval.total_seconds())
+            if self.verbose: print(f'''*** {point['state']}, {interval.total_seconds()}s ***''')
             current+=interval.total_seconds()
             self.points.append(current)
 
@@ -148,8 +157,13 @@ class DAQ:
             # ---
             # print(f"Filename: {filename}")
             # ---
+            if self.destination:
+                dfilename = f"{self.destination}/{filename}"
+                # Here we would write the STF to the file, and send a notification to a message queue
+                with open(dfilename, 'w') as f:
+                    f.write(json.dumps(md))
+                    f.close()
             self.Nstf+=1
-            # print(self.get_time())
             yield self.env.timeout(stf_arrival)
 
 

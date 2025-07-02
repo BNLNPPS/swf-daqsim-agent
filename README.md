@@ -2,6 +2,10 @@
 
 ---
 
+## Disclaimer
+
+The _comms_ part is currently work in progress, it's a stub not ready for real use.
+
 ## About
 * __Work Title__: _swf-daqsim-agent_
 * __Purpose__: To simulate the state machine of the ePIC DAQ, including its components interacting

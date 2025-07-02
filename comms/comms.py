@@ -6,6 +6,12 @@ import stomp
 daqsim_path = os.environ.get('DAQSIM_PATH', '../')  # Default to parent directory if not set
 if daqsim_path not in sys.path: sys.path.append(daqsim_path)
 
+mq_user     = os.environ.get('MQ_USER',     None)
+mq_passwd   = os.environ.get('MQ_PASSWD',   None)
+mq_port     = int(os.environ.get('MQ_PORT', 61612))
+mq_host     = os.environ.get('MQ_HOST',     'pandaserver02.sdcc.bnl.gov')
+mq_cafile   = os.environ.get('MQ_CAFILE',   daqsim_path + '/config/full-chain.pem')
+
 class Messenger:
     """
     A messenger class for sending and receiving messages using ActiveMQ, for communication

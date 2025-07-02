@@ -67,7 +67,7 @@ try:
     if verbose:
         print(f'''*** PYTHONPATH contains the daq package, will use it ***''')
 except:
-    print('*** PYTHONPATH does not contain the daq package, exiting...***')
+    print('*** Failed to load the daq package from PYTHONPATH, exiting...***')
     exit(-1)
 
 try:
@@ -75,7 +75,7 @@ try:
     if verbose:
         print(f'''*** PYTHONPATH contains the comms package, will use it ***''')
 except:
-    print('*** PYTHONPATH does not contain the comms package, exiting...***')
+    print('*** Failed to load the comms package from PYTHONPATH, exiting...***')
     exit(-1)
 
 daq = DAQ(schedule_f    = schedule,

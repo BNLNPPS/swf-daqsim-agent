@@ -26,6 +26,8 @@ The working version of the file names is as follows:
 swf.20250625.<integer>.<state>.<substate>.stf
 ```
 
+Regarding the Python dependencies, they are captured in the _requirements_ file in this repository.
+
 ---
 
 ## The Simulation
@@ -104,5 +106,7 @@ Kept here to have it close to the code:
 ## Communications
 
 This agent is using ActieMQ to send notifications to the swf-data-agent and other elements of the test bed.
+The Python package _stomp-py_ needs to be installed in the current version of this interface.
+
 
 

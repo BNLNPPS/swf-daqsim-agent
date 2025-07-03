@@ -84,8 +84,8 @@ if mq:
     try:
         from comms import Messenger
         messenger = Messenger()
-        if verbose:
-            print(f'''*** Successfuly imported the Messenger from comms ***''')
+        if verbose: print(f'''*** Successfuly imported the Messenger from comms ***''')
+        messenger.send()
     except:
         print('*** Failed to import the Messenger from comms, exiting...***')
         exit(-1)

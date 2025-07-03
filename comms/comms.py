@@ -41,12 +41,14 @@ class Messenger:
         if self.conn:
             self.conn.disconnect()
 
-    def send(self, destination, message, headers=None):
-        """Send a message to a specified destination."""
-        if not self.conn:
-            raise Exception("Not connected to ActiveMQ server.")
-        headers = headers or {}
-        self.conn.send(destination=destination, body=message, headers=headers)
+    def send(self):
+        try:
+            self.conn.connect(login=self.username, passcode=self.password, wait=True, version='1.2')
+            self.conn.send(destination='epictopic', body='Hello from producer!')
+            print("Message sent")
+            self.conn.disconnect()
+        except Exception as e:
+            print("Connection failed:", type(e).__name__, e)
 
     def subscribe(self, destination, callback, id='1', ack='auto'):
         """Subscribe to a topic and set a callback for received messages."""

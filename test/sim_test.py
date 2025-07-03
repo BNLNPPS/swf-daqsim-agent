@@ -67,32 +67,42 @@ except:
     print('*** Failed to load the daq package from PYTHONPATH, exiting...***')
     exit(-1)
 
-try:
-    from comms import Sender
-    if verbose:
-        print(f'''*** PYTHONPATH contains the comms package, will use it ***''')
-except:
-    print('*** Failed to load the comms package from PYTHONPATH, exiting...***')
-    exit(-1)
+# try:
+#     from comms import Sender
+#     if verbose:
+#         print(f'''*** PYTHONPATH contains the comms package, will use it ***''')
+# except:
+#     print('*** Failed to load the comms package from PYTHONPATH, exiting...***')
+#     exit(-1)
 
 
 if mq:
     try:
-        from comms import Messenger
-        if verbose: print(f'''*** Successfuly imported the Messenger from comms ***''')
+        from comms import Sender, Receiver
+        if verbose: print(f'''*** Successfuly imported the Sender and Receiver from comms ***''')
     except:
-        print('*** Failed to import the Messenger from comms, exiting...***')
+        print('*** Failed to import the Sender and Receiver from comms, exiting...***')
         exit(-1)
 
     try:
         sndr = Sender()
         sndr.connect()
-        if verbose: print(f'''*** Successfully instantiated the Sender, will send messages to MQ ***''')
+        if verbose: print(f'''*** Successfully instantiated and connected the Sender, will send messages to MQ ***''')
     except:
         print('*** Failed to instantiate the Messenger, exiting...***')
         exit(-1)
 
     sndr.send()
+
+
+    try:
+        rcvr = Receiver()
+        rcvr.connect()
+        if verbose: print(f'''*** Successfully instantiated and connected the Receiver, will receive messages from MQ ***''')
+    except:
+        print('*** Failed to instantiate the Receiver, exiting...***')
+        exit(-1)
+
     # messenger.receive() -- work in progress, not implemented yet
 
 daq = DAQ(schedule_f    = schedule,

@@ -38,6 +38,8 @@ conn.transport.set_ssl(
     ssl_version=ssl.PROTOCOL_TLS_CLIENT
 )
 
+# Code above this localtion is common for both sender and receiver
+
 # Attach listener
 #conn.set_listener('', MyListener())
 conn.set_listener('debug', stomp.PrintingListener())

@@ -78,6 +78,16 @@ except:
     print('*** Failed to load the comms package from PYTHONPATH, exiting...***')
     exit(-1)
 
+if mq:
+    try:
+        from comms import Messenger
+        if verbose:
+            print(f'''*** Successfuly imported the Messenger from comms ***''')
+    except:
+        print('*** Failed to import the Messenger from comms, exiting...***')
+        exit(-1)
+
+
 daq = DAQ(schedule_f    = schedule,
           destination   = destination,
           until         = until,

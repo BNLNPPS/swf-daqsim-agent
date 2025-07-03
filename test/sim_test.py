@@ -1,23 +1,20 @@
 #! /usr/bin/env python
+
 #############################################
-
-import os
-import sys
+import os, argparse, datetime, sys
 from   sys import exit
-import argparse
-import datetime
+# ---
 
-##############################################
 parser = argparse.ArgumentParser()
 parser.add_argument("-v", "--verbose",  action='store_true',    help="Verbose mode")
-parser.add_argument("-m", "--mq", action='store_true',          help="Send messages to MQ",               default=False)
+parser.add_argument("-m", "--mq",       action='store_true',    help="Send messages to MQ",                     default=False)
 parser.add_argument("-s", "--schedule", type=str,               help='Path to the schedule (YAML)',             default='')
 
 parser.add_argument("-f", "--factor",   type=float,             help='Time factor',                             default=1.0)
 parser.add_argument("-u", "--until",    type=float,             help='The limit, if undefined: end of schedule',default=None) #  required=False, nargs='?')
 parser.add_argument("-c", "--clock",    type=float,             help='Scheduler clock freq(seconds)',           default=1.0)
 
-parser.add_argument("-d", "--destination", type=str,            help='Path to the destination folder, if empty do not output data',  default='')
+parser.add_argument("-d", "--dest",     type=str,               help='Path to the destination folder, if empty do not output data',  default='')
 
 parser.add_argument("-L", "--low",      type=float,             help='The "low" time limit on STF production',  default=1.0)
 parser.add_argument("-H", "--high",     type=float,             help='The "high" time limit on STF production', default=2.0)
@@ -30,7 +27,7 @@ if verbose: print(f'''*** Verbose mode is set to {verbose} ***''')
 if verbose: print(f'''*** MQ mode is set to {mq} ***''')
 
 schedule    = args.schedule
-destination = args.destination
+dest        = args.dest
 
 factor      = args.factor
 until       = args.until
@@ -54,10 +51,10 @@ if schedule=='':    schedule    = daqsim_path + "/config/schedule-rt.yml"
 if verbose:
     print(f'''*** Set the Python path: {sys.path} ***''')
     print(f'''*** Schedule description file path: {schedule} ***''')
-    if destination=='':
+    if dest=='':
         print(f'''*** No output destination is set, will not write data ***''')
     else:  
-        print(f'''*** Output destination is set to: {destination} ***''')
+        print(f'''*** Output destination is set to: {dest} ***''')
 
     print(f'''*** Simulation time factor: {factor} ***''')
 
@@ -88,18 +85,18 @@ if mq:
         exit(-1)
 
     try:
-        s = Sender()
-        s.connect()
+        sndr = Sender()
+        sndr.connect()
         if verbose: print(f'''*** Successfully instantiated the Sender, will send messages to MQ ***''')
     except:
         print('*** Failed to instantiate the Messenger, exiting...***')
         exit(-1)
 
-    s.send()
+    sndr.send()
     # messenger.receive() -- work in progress, not implemented yet
 
 daq = DAQ(schedule_f    = schedule,
-          destination   = destination,
+          destination   = dest,
           until         = until,
           clock         = clock,
           factor        = factor,

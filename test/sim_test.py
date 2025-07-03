@@ -83,13 +83,18 @@ messenger = None
 if mq:
     try:
         from comms import Messenger
-        messenger = Messenger()
         if verbose: print(f'''*** Successfuly imported the Messenger from comms ***''')
-        messenger.send()
     except:
         print('*** Failed to import the Messenger from comms, exiting...***')
         exit(-1)
 
+    try:
+        messenger = Messenger()
+    except:
+        print('*** Failed to instantiate the Messenger, exiting...***')
+        exit(-1)
+
+    messenger.send()
 
 daq = DAQ(schedule_f    = schedule,
           destination   = destination,

@@ -9,7 +9,9 @@ if daqsim_path not in sys.path: sys.path.append(daqsim_path)
 
 mq_user     = os.environ.get('MQ_USER',     None)
 mq_passwd   = os.environ.get('MQ_PASSWD',   None)
+
 mq_port     = int(os.environ.get('MQ_PORT', 61612))
+
 mq_host     = os.environ.get('MQ_HOST',     'pandaserver02.sdcc.bnl.gov')
 mq_cafile   = os.environ.get('MQ_CAFILE',   daqsim_path + '/config/full-chain.pem')
 
@@ -28,7 +30,19 @@ class Messenger:
         self.port = port
         self.username = username
         self.password = password
+
+        if(not self.username or not self.password):
+            raise ValueError("MQ_USER and MQ_PASSWD environment variables must be set.")
+
+        self.verbose = verbose
+        print(f"Initializing Messenger with host={self.host}, port={self.port}, username={self.username}")
         self.conn = stomp.Connection(host_and_ports=[(host, port)], vhost=host,try_loopback_connect=False)
+
+        if not self.conn: raise Exception("Connection object is not initialized.")
+    
+        # Set SSL parameters for the connection
+        if not os.path.exists(mq_cafile):      
+            raise FileNotFoundError(f"MQ_CAFILE '{mq_cafile}' does not exist.")
 
         self.conn.transport.set_ssl(
             for_hosts=[(mq_host, mq_port)],
@@ -36,15 +50,33 @@ class Messenger:
             ssl_version=ssl.PROTOCOL_TLS_CLIENT
         )
 
+        try:
+            self.conn.connect(login=self.username, passcode=self.password, wait=True, version='1.2')
+            if self.conn.is_connected():
+                print("Connected to MQ server at {}:{}".format(self.host, self.port))
+            else:
+                print("Failed to connect to MQ server at {}:{}".format(self.host, self.port))
+        except Exception as e:
+            print("Connection failed:", type(e).__name__, e)
+
+
+
     def disconnect(self):
         """Disconnect from the ActiveMQ server."""
         if self.conn:
             self.conn.disconnect()
 
+
     def send(self):
         try:
             self.conn.connect(login=self.username, passcode=self.password, wait=True, version='1.2')
-            self.conn.send(destination='epictopic', body='Hello from producer!')
+            if self.conn.is_connected():
+                print("Connected to ActiveMQ server at {}:{}".format(self.host, self.port))
+            else:
+                print("Failed to connect to ActiveMQ server at {}:{}".format(self.host, self.port))
+                return
+            self.conn.send(destination='epictopic', body='heartbeat', headers={'persistent': 'true'})
+
             print("Message sent")
             self.conn.disconnect()
         except Exception as e:

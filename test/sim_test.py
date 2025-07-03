@@ -78,9 +78,12 @@ except:
     print('*** Failed to load the comms package from PYTHONPATH, exiting...***')
     exit(-1)
 
+messenger = None
+
 if mq:
     try:
         from comms import Messenger
+        messenger = Messenger()
         if verbose:
             print(f'''*** Successfuly imported the Messenger from comms ***''')
     except:

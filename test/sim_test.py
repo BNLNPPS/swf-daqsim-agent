@@ -71,14 +71,13 @@ except:
     exit(-1)
 
 try:
-    from comms import *
+    from comms import Sender
     if verbose:
         print(f'''*** PYTHONPATH contains the comms package, will use it ***''')
 except:
     print('*** Failed to load the comms package from PYTHONPATH, exiting...***')
     exit(-1)
 
-messenger = None
 
 if mq:
     try:
@@ -89,12 +88,15 @@ if mq:
         exit(-1)
 
     try:
-        messenger = Messenger()
+        s = Sender()
+        s.connect()
+        if verbose: print(f'''*** Successfully instantiated the Sender, will send messages to MQ ***''')
     except:
         print('*** Failed to instantiate the Messenger, exiting...***')
         exit(-1)
 
-    messenger.send()
+    s.send()
+    # messenger.receive() -- work in progress, not implemented yet
 
 daq = DAQ(schedule_f    = schedule,
           destination   = destination,

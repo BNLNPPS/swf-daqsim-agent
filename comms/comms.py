@@ -1,6 +1,7 @@
 import os
 import sys
 import stomp
+import ssl
 
 # Ensure the path to the DAQSIM_PATH is set correctly
 daqsim_path = os.environ.get('DAQSIM_PATH', '../')  # Default to parent directory if not set
@@ -29,6 +30,11 @@ class Messenger:
         self.password = password
         self.conn = stomp.Connection(host_and_ports=[(host, port)], vhost=host,try_loopback_connect=False)
 
+        self.conn.transport.set_ssl(
+            for_hosts=[(mq_host, mq_port)],
+            ca_certs=mq_cafile,
+            ssl_version=ssl.PROTOCOL_TLS_CLIENT
+        )
 
     def disconnect(self):
         """Disconnect from the ActiveMQ server."""

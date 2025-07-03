@@ -70,16 +70,17 @@ class Messenger:
 
 
     def connect(self):
-        try:
-            self.conn.connect(login=self.username, passcode=self.password, wait=True, version='1.2')
-            if self.conn.is_connected():
-                if self.verbose:
-                    print("Connected to MQ server at {}:{}".format(self.host, self.port))
-            else:
-                if self.verbose:
-                    print("Failed to connect to MQ server at {}:{}".format(self.host, self.port))
-        except Exception as e:
-            print("Connection failed:", type(e).__name__, e)
+        print('** Connecting to ActiveMQ server... **')
+        # try:
+        #     self.conn.connect(login=self.username, passcode=self.password, wait=True, version='1.2')
+        #     if self.conn.is_connected():
+        #         if self.verbose:
+        #             print("Connected to MQ server at {}:{}".format(self.host, self.port))
+        #     else:
+        #         if self.verbose:
+        #             print("Failed to connect to MQ server at {}:{}".format(self.host, self.port))
+        # except Exception as e:
+        #     print("Connection failed:", type(e).__name__, e)
 
 
 
@@ -90,19 +91,20 @@ class Messenger:
 
 
     def send(self):
-        try:
-            self.conn.connect(login=self.username, passcode=self.password, wait=True, version='1.2')
-            if self.conn.is_connected():
-                print("Connected to ActiveMQ server at {}:{}".format(self.host, self.port))
-            else:
-                print("Failed to connect to ActiveMQ server at {}:{}".format(self.host, self.port))
-                return
-            self.conn.send(destination='epictopic', body='heartbeat', headers={'persistent': 'true'})
+        print('** Sending message to ActiveMQ server... **')
+        # try:
+        #     self.conn.connect(login=self.username, passcode=self.password, wait=True, version='1.2')
+        #     if self.conn.is_connected():
+        #         print("Connected to ActiveMQ server at {}:{}".format(self.host, self.port))
+        #     else:
+        #         print("Failed to connect to ActiveMQ server at {}:{}".format(self.host, self.port))
+        #         return
+        #     self.conn.send(destination='epictopic', body='heartbeat', headers={'persistent': 'true'})
 
-            print("Message sent")
-            self.conn.disconnect()
-        except Exception as e:
-            print("Connection failed:", type(e).__name__, e)
+        #     print("Message sent")
+        #     self.conn.disconnect()
+        # except Exception as e:
+        #     print("Connection failed:", type(e).__name__, e)
 
     # def subscribe(self, destination, callback, id='1', ack='auto'):
     #     """Subscribe to a topic and set a callback for received messages."""
@@ -143,16 +145,28 @@ class Messenger:
 
 ###################################################################
 class Sender(Messenger):
+    def __init__(self, host=mq_host, port=mq_port, username=mq_user, password=mq_passwd, verbose=False):
+        super().__init__(host=mq_host, port=mq_port, username=mq_user, password=mq_passwd, verbose=False)
+
+
     def connect(self):
         try:
             self.conn.connect(login=self.username, passcode=self.password, wait=True, version='1.2')
             if self.conn.is_connected():
                 if self.verbose:
-                    print("Connected to MQ server at {}:{}".format(self.host, self.port))
+                    print("*** Connected to MQ server at {}:{} ***".format(self.host, self.port))
             else:
                 if self.verbose:
                     print("Failed to connect to MQ server at {}:{}".format(self.host, self.port))
         except Exception as e:
             print("Connection failed:", type(e).__name__, e)
+
+    # ---
+    def send(self):
+        self.conn.send(destination='epictopic', body='heartbeat', headers={'persistent': 'true'})
+
+        print("Message sent")
+        self.conn.disconnect()
+
 
 #class Receiver(Messenger):

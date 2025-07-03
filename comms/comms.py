@@ -22,21 +22,13 @@ class Messenger:
     for communication with the ActiveMQ server.
     """
 
-    def __init__(self, host='localhost', port=61613, username=None, password=None, verbose=False):
+    def __init__(self, host=mq_host, port=mq_port, username=mq_user, password=mq_passwd, verbose=False):
         self.host = host
         self.port = port
         self.username = username
         self.password = password
-        self.conn = None
+        self.conn = stomp.Connection(host_and_ports=[(host, port)], vhost=host,try_loopback_connect=False)
 
-    def connect(self):
-        """Connect to the ActiveMQ server."""
-        import stomp
-        self.conn = stomp.Connection([(self.host, self.port)])
-        if self.username and self.password:
-            self.conn.connect(self.username, self.password, wait=True)
-        else:
-            self.conn.connect(wait=True)
 
     def disconnect(self):
         """Disconnect from the ActiveMQ server."""

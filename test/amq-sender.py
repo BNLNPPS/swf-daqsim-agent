@@ -1,5 +1,6 @@
 import stomp
 import ssl
+from datetime import datetime
 
 host = 'pandaserver02.sdcc.bnl.gov'
 port = 61612
@@ -15,7 +16,7 @@ conn.transport.set_ssl(
 
 try:
     conn.connect(login='<username>', passcode='<userpasswd>', wait=True, version='1.2')
-    conn.send(destination='epictopic', body='Hello from producer!')
+    conn.send(destination='epictopic', body=f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Hello from producer!")
     print("Message sent")
     conn.disconnect()
 except Exception as e:

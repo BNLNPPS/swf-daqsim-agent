@@ -3,14 +3,14 @@ import ssl
 import time
 
 class MyListener(stomp.ConnectionListener):
-    def on_connected(self, headers):
-        print("Connected to broker:", headers)
+    def on_connected(self, frame):
+        print("Connected to broker:", frame.headers)
 
-    def on_message(self, headers, message):
-        print(f"Received message:\n{message}")
+    def on_message(self, frame):
+        print(f"Received message:\n{frame.body}")
 
     def on_error(self, frame):
-        print(f"Error from broker: {frame}")
+        print(f"Error from broker: {frame.body}")
 
     def on_disconnected(self):
         print("Disconnected from broker")
@@ -41,8 +41,8 @@ conn.transport.set_ssl(
 # Code above this localtion is common for both sender and receiver
 
 # Attach listener
-#conn.set_listener('', MyListener())
-conn.set_listener('debug', stomp.PrintingListener())
+conn.set_listener('', MyListener())
+#conn.set_listener('debug', stomp.PrintingListener())
 
 # Connect with a durable client-id
 conn.connect(

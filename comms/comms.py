@@ -74,28 +74,29 @@ class Messenger:
 ###################################################################
 class Sender(Messenger):
     def __init__(self, host=mq_host, port=mq_port, username=mq_user, password=mq_passwd, verbose=False):
-        super().__init__(host=mq_host, port=mq_port, username=mq_user, password=mq_passwd, verbose=False)
+        super().__init__(host=mq_host, port=mq_port, username=mq_user, password=mq_passwd, verbose=verbose)
 
 
     # ---
     def connect(self):
+        print('** Sender connecting to ActiveMQ server... **', self.verbose)
         try:
             self.conn.connect(login=self.username, passcode=self.password, wait=True, version='1.2')
             if self.conn.is_connected():
                 if self.verbose:
-                    print("*** Connected to MQ server at {}:{} ***".format(self.host, self.port))
+                    print("*** Sender connected to MQ server at {}:{} ***".format(self.host, self.port))
             else:
-                if self.verbose:
-                    print("Failed to connect to MQ server at {}:{}".format(self.host, self.port))
+                # if self.verbose:
+                print("*** Sender not connected to MQ server at {}:{} ***".format(self.host, self.port))
         except Exception as e:
-            print("Connection failed:", type(e).__name__, e)
+            print("Sender connection failed:", type(e).__name__, e)
 
     # ---
     def send(self):
         self.conn.send(destination='epictopic', body='heartbeat', headers={'persistent': 'true'})
 
         print("Message sent")
-        self.conn.disconnect()
+        # self.conn.disconnect()
 
 
 ###################################################################
@@ -118,7 +119,7 @@ class Listener(stomp.ConnectionListener):
 
 class Receiver(Messenger):
     def __init__(self, host=mq_host, port=mq_port, username=mq_user, password=mq_passwd, verbose=False):
-        super().__init__(host=mq_host, port=mq_port, username=mq_user, password=mq_passwd, verbose=False)
+        super().__init__(host=mq_host, port=mq_port, username=mq_user, password=mq_passwd, verbose=verbose)
 
 
     # ---
@@ -128,15 +129,15 @@ class Receiver(Messenger):
         self.conn.set_listener('debug', stomp.PrintingListener())
         # Connect with a durable client-id
         try:
-            self.conn.connect(login=self.username, passcode=self.password, wait=True, version='1.2')
+            self.conn.connect(login=self.username, passcode=self.password, wait=True, version='1.2', headers={'client-id': 'sub-test-001'})
             if self.conn.is_connected():
                 if self.verbose:
-                    print("*** Connected to MQ server at {}:{} ***".format(self.host, self.port))
+                    print("*** Receiver connected to MQ server at {}:{} ***".format(self.host, self.port))
             else:
                 if self.verbose:
-                    print("Failed to connect to MQ server at {}:{}".format(self.host, self.port))
+                    print("*** Receiver not connected to MQ server at {}:{} ***".format(self.host, self.port))
         except Exception as e:
-            print("Connection failed:", type(e).__name__, e)
+            print("Receiver connection failed:", type(e).__name__, e)
 
 
 

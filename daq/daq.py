@@ -31,7 +31,8 @@ class DAQ:
                  factor=1.0,
                  low=1.0,
                  high=2.0,
-                 verbose=False):
+                 verbose=False,
+                 sender=None):
         self.state      = None          # current state of the DAQ, undergoes changes in time
         self.subst      = None          # current substate of the DAQ, undergoes changes in time
         self.schedule_f = schedule_f    # filename, of the YAML definition of the schefule
@@ -47,6 +48,7 @@ class DAQ:
         self.points     = []            # state switch points
         self.end        = 0.0           # will be updated -- the last of the points
         self.Nstf       = 0             # counter of the generated STFs
+        self.sender     = sender        # the MQ sender, if any
 
         self.read_schedule()
 
@@ -164,6 +166,10 @@ class DAQ:
                 with open(dfilename, 'w') as f:
                     f.write(json.dumps(md))
                     f.close()
+            if self.sender:
+                self.sender.send()
+                # self.sender.send(destination='epictopic', body=json.dumps(md), headers={'persistent': 'true'})
+                if self.verbose: print(f'''*** Sent MQ message for STF {filename} ***''')
             self.Nstf+=1
             yield self.env.timeout(stf_arrival)
 

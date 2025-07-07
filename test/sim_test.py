@@ -76,6 +76,9 @@ except:
 #     exit(-1)
 
 
+sndr = None
+rcvr = None
+
 if mq:
     try:
         from comms import Sender, Receiver
@@ -85,18 +88,17 @@ if mq:
         exit(-1)
 
     try:
-        sndr = Sender()
+        sndr = Sender(verbose=verbose)
         sndr.connect()
         if verbose: print(f'''*** Successfully instantiated and connected the Sender, will send messages to MQ ***''')
     except:
         print('*** Failed to instantiate the Messenger, exiting...***')
         exit(-1)
 
-    sndr.send()
 
 
     try:
-        rcvr = Receiver()
+        rcvr = Receiver(verbose=verbose)
         rcvr.connect()
         if verbose: print(f'''*** Successfully instantiated and connected the Receiver, will receive messages from MQ ***''')
     except:
@@ -112,7 +114,9 @@ daq = DAQ(schedule_f    = schedule,
           factor        = factor,
           low           = low,
           high          = high,
-          verbose       = verbose)
+          verbose       = verbose,
+          sender        = sndr
+          )
 daq.simulate()
 
 print('---')

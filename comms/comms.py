@@ -92,8 +92,8 @@ class Sender(Messenger):
             print("Sender connection failed:", type(e).__name__, e)
 
     # ---
-    def send(self):
-        self.conn.send(destination='epictopic', body='heartbeat', headers={'persistent': 'true'})
+    def send(self, destination='epictopic', body='heartbeat', headers={'persistent': 'true'}):
+        self.conn.send(destination=destination, body=body, headers=headers)
 
         print("Message sent")
         # self.conn.disconnect()
@@ -104,14 +104,15 @@ class Listener(stomp.ConnectionListener):
     def on_connected(self, headers):
         print("Connected to broker:", headers)
 
-    def on_message(self, headers, message):
-        print(f"Received message:\n{message}")
+    def on_message(self, frame):
+        print(f"Received message: {frame.body}")
 
     def on_error(self, frame):
         print(f"Error from broker: {frame}")
 
     def on_disconnected(self):
         print("Disconnected from broker")
+
 
 # ---
 # The Receiver class is a subclass of Messenger that is used to receive messages from the ActiveMQ server.
@@ -125,8 +126,9 @@ class Receiver(Messenger):
     # ---
     def connect(self):
         # Attach listener
-        # self.conn.set_listener('', Listener())
-        self.conn.set_listener('debug', stomp.PrintingListener())
+        self.conn.set_listener('', Listener())
+        
+        #self.conn.set_listener('debug', stomp.PrintingListener())
         # Connect with a durable client-id
         try:
             self.conn.connect(login=self.username, passcode=self.password, wait=True, version='1.2', headers={'client-id': 'sub-test-001'})

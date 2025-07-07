@@ -90,8 +90,9 @@ class DAQ:
 
 
     # ---
-    def metadata(self, start, end):
+    def metadata(self, filename, start, end):
         md ={
+                'filename': filename,
                 'start':    start.strftime("%Y%m%d%H%M%S"),
                 'end':      end.strftime("%Y%m%d%H%M%S"),
                 'state':    self.state,
@@ -147,19 +148,14 @@ class DAQ:
             interval    = datetime.timedelta(seconds=stf_arrival)
             build_end   = build_start+interval
 
-            md = self.metadata(build_start, build_end)
-            print(json.dumps(md))
-
             formatted_date = build_end.strftime("%Y%m%d")             # ("%Y-%m-%d %H:%M:%S")
             formatted_time = build_end.strftime("%H%M%S")
 
-            # print(build_start.strftime("%Y%m%d%H%M%S"), build_end.strftime("%Y%m%d%H%M%S"))
-
             # The filename template: swf.20250625.<integer>.<state>.<substate>.stf
             filename = f'''swf.{formatted_date}.{formatted_time}.{self.state}.{self.subst}.stf'''
-            # ---
-            # print(f"Filename: {filename}")
-            # ---
+
+            md = self.metadata(filename, build_start, build_end)
+
             if self.destination:
                 dfilename = f"{self.destination}/{filename}"
                 # Here we would write the STF to the file, and send a notification to a message queue
@@ -167,7 +163,7 @@ class DAQ:
                     f.write(json.dumps(md))
                     f.close()
             if self.sender:
-                self.sender.send()
+                self.sender.send(body=json.dumps(md))
                 # self.sender.send(destination='epictopic', body=json.dumps(md), headers={'persistent': 'true'})
                 if self.verbose: print(f'''*** Sent MQ message for STF {filename} ***''')
             self.Nstf+=1

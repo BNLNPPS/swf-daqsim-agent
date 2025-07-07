@@ -1,10 +1,15 @@
 #! /usr/bin/env python
 
 #############################################
+
 import os, argparse, datetime, sys
 from   sys import exit
+
 # ---
 
+def func(to_print):
+    print(to_print) # a simple function to process received messages
+# ---
 parser = argparse.ArgumentParser()
 parser.add_argument("-v", "--verbose",  action='store_true',    help="Verbose mode")
 parser.add_argument("-m", "--mq",       action='store_true',    help="Send messages to MQ",                     default=False)
@@ -38,6 +43,7 @@ high        = args.high
 
 # ---
 daqsim_path=''
+
 try:
     daqsim_path=os.environ['DAQSIM_PATH']
     if verbose: print(f'''*** The DAQSIM_PATH is defined in the environment: {daqsim_path}, will be added to sys.path ***''')
@@ -67,14 +73,6 @@ except:
     print('*** Failed to load the daq package from PYTHONPATH, exiting...***')
     exit(-1)
 
-# try:
-#     from comms import Sender
-#     if verbose:
-#         print(f'''*** PYTHONPATH contains the comms package, will use it ***''')
-# except:
-#     print('*** Failed to load the comms package from PYTHONPATH, exiting...***')
-#     exit(-1)
-
 
 sndr = None
 rcvr = None
@@ -98,7 +96,7 @@ if mq:
 
 
     try:
-        rcvr = Receiver(verbose=verbose)
+        rcvr = Receiver(verbose=verbose, processor=func) # a function to process received messages
         rcvr.connect()
         if verbose: print(f'''*** Successfully instantiated and connected the Receiver, will receive messages from MQ ***''')
     except:
@@ -120,6 +118,15 @@ daq = DAQ(schedule_f    = schedule,
 daq.simulate()
 
 print('---')
-if verbose: print(f'''*** Completed at {daq.get_time()}. Number of STFs generated: {daq.Nstf} ***''')
+if verbose:
+    print(f'''*** Completed at {daq.get_time()}. Number of STFs generated: {daq.Nstf} ***''')
+    print(f'''*** Disconnecting MQ communications ***''')
+
+if mq:
+    if sndr:
+        sndr.disconnect()
+    if rcvr:
+        rcvr.disconnect()
+print('---')
 
 

@@ -95,17 +95,21 @@ class Sender(Messenger):
     def send(self, destination='epictopic', body='heartbeat', headers={'persistent': 'true'}):
         self.conn.send(destination=destination, body=body, headers=headers)
 
-        print("Message sent")
-        # self.conn.disconnect()
-
-
 ###################################################################
 class Listener(stomp.ConnectionListener):
+    def __init__(self, processor=None, verbose=False):
+        super().__init__()
+        self.processor  = processor
+        self.verbose    = verbose
+
+
     def on_connected(self, headers):
-        print("Connected to broker:", headers)
+        if self.verbose:
+            print(f'''*** Connected to broker: {headers} ***''')
 
     def on_message(self, frame):
-        print(f"Received message: {frame.body}")
+        if self.processor:
+            self.processor(frame.body)
 
     def on_error(self, frame):
         print(f"Error from broker: {frame}")
@@ -119,14 +123,14 @@ class Listener(stomp.ConnectionListener):
 # It inherits the connection and disconnection methods from Messenger and can be extended to add more functionality.
 
 class Receiver(Messenger):
-    def __init__(self, host=mq_host, port=mq_port, username=mq_user, password=mq_passwd, verbose=False):
+    def __init__(self, host=mq_host, port=mq_port, username=mq_user, password=mq_passwd, verbose=False, processor=None):
         super().__init__(host=mq_host, port=mq_port, username=mq_user, password=mq_passwd, verbose=verbose)
-
+        self.processor = processor
 
     # ---
     def connect(self):
         # Attach listener
-        self.conn.set_listener('', Listener())
+        self.conn.set_listener('', Listener(verbose=self.verbose, processor=self.processor))
         
         #self.conn.set_listener('debug', stomp.PrintingListener())
         # Connect with a durable client-id
@@ -150,75 +154,4 @@ class Receiver(Messenger):
             ack='auto',
             headers={'activemq.subscriptionName': 'test-durable-sub'}
             )
-        # Loop forever
-        # try:
-        #     while True:
-        #     time.sleep(1)
-        # except KeyboardInterrupt:
-        #     print("Exiting...")
 
-
-
-# ATTIC
-
-        # try:
-        #     self.conn.connect(login=self.username, passcode=self.password, wait=True, version='1.2')
-        #     if self.conn.is_connected():
-        #         if self.verbose:
-        #             print("Connected to MQ server at {}:{}".format(self.host, self.port))
-        #     else:
-        #         if self.verbose:
-        #             print("Failed to connect to MQ server at {}:{}".format(self.host, self.port))
-        # except Exception as e:
-        #     print("Connection failed:", type(e).__name__, e)
-
-        # try:
-        #     self.conn.connect(login=self.username, passcode=self.password, wait=True, version='1.2')
-        #     if self.conn.is_connected():
-        #         print("Connected to ActiveMQ server at {}:{}".format(self.host, self.port))
-        #     else:
-        #         print("Failed to connect to ActiveMQ server at {}:{}".format(self.host, self.port))
-        #         return
-        #     self.conn.send(destination='epictopic', body='heartbeat', headers={'persistent': 'true'})
-
-        #     print("Message sent")
-        #     self.conn.disconnect()
-        # except Exception as e:
-        #     print("Connection failed:", type(e).__name__, e)
-
-    # def subscribe(self, destination, callback, id='1', ack='auto'):
-    #     """Subscribe to a topic and set a callback for received messages."""
-    #     if not self.conn:
-    #         raise Exception("Not connected to ActiveMQ server.")
-    #     self.conn.set_listener(id, callback)
-    #     self.conn.subscribe(destination=destination, id=id, ack=ack)
-
-    # def unsubscribe(self, id='1'):
-    #     """Unsubscribe from a topic."""
-    #     if not self.conn:
-    #         raise Exception("Not connected to ActiveMQ server.")
-    #     self.conn.unsubscribe(id=id)
-
-
-    # def receive(self, timeout=None):
-    #     """Receive a message from the ActiveMQ server."""
-    #     if not self.conn:
-    #         raise Exception("Not connected to ActiveMQ server.")
-    #     return self.conn.receive(timeout=timeout) if timeout else self.conn.receive()
-    # def is_connected(self):
-    #     """Check if the connection to the ActiveMQ server is active."""
-    #     return self.conn is not None and self.conn.is_connected()
-    # def get_connection_info(self):
-    #     """Get the connection information."""
-    #     if not self.conn:
-    #         raise Exception("Not connected to ActiveMQ server.")
-    #     return {
-    #         'host': self.host,
-    #         'port': self.port,
-    #         'username': self.username,
-    #         'is_connected': self.is_connected()
-    #     }
-    # def __enter__(self):
-    #     """Enter the runtime context related to this object."""
-    #     self.connect()
-    #     return self

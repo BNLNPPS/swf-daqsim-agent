@@ -103,8 +103,7 @@ if mq:
         print('*** Failed to instantiate the Receiver, exiting...***')
         exit(-1)
 
-    # messenger.receive() -- work in progress, not implemented yet
-
+# ---
 daq = DAQ(schedule_f    = schedule,
           destination   = dest,
           until         = until,

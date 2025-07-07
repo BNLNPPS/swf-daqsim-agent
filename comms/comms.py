@@ -29,6 +29,7 @@ class Messenger:
     for communication with the ActiveMQ server.
     """
 
+    # ---
     def __init__(self, host=mq_host, port=mq_port, username=mq_user, password=mq_passwd, verbose=False):
         self.host       = host
         self.port       = port
@@ -55,8 +56,7 @@ class Messenger:
             ssl_version=ssl.PROTOCOL_TLS_CLIENT
         )
 
-
-
+    # ---
     def disconnect(self):
         """Disconnect from the ActiveMQ server."""
         if self.conn:
@@ -65,10 +65,12 @@ class Messenger:
     
     # ^ Upstream is commmon for sender and receiver ^
 
+    # ---
+    # The connect and send methods are intended to be overridden in subclasses.
     def connect(self):
         print('** Base class: Connecting to ActiveMQ server... **')
 
-
+    # ---
     def send(self):
         print('** Base class: Sending message to ActiveMQ server... **')
 
@@ -133,7 +135,8 @@ class Receiver(Messenger):
         # Attach listener
         self.conn.set_listener('', Listener(verbose=self.verbose, processor=self.processor))
         
-        #self.conn.set_listener('debug', stomp.PrintingListener())
+        # Optionally, attach a debug listener:
+        # self.conn.set_listener('debug', stomp.PrintingListener())
         # Connect with a durable client-id
         try:
             self.conn.connect(login=self.username, passcode=self.password, wait=True, version='1.2', headers={'client-id': 'sub-test-001'})

@@ -55,11 +55,6 @@ class Messenger:
             ssl_version=ssl.PROTOCOL_TLS_CLIENT
         )
 
-        # Upstream is commmon for sender and receiver
-
-
-    def connect(self):
-        print('** Base class: Connecting to ActiveMQ server... **')
 
 
     def disconnect(self):
@@ -67,9 +62,15 @@ class Messenger:
         if self.conn:
             self.conn.disconnect()
 
+    
+    # ^ Upstream is commmon for sender and receiver ^
+
+    def connect(self):
+        print('** Base class: Connecting to ActiveMQ server... **')
+
 
     def send(self):
-        print('** Sending message to ActiveMQ server... **')
+        print('** Base class: Sending message to ActiveMQ server... **')
 
 ###################################################################
 class Sender(Messenger):

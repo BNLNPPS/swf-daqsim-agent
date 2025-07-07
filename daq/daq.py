@@ -125,21 +125,21 @@ class DAQ:
                     self.state=self.schedule[index]['state']
                     self.subst=self.schedule[index]['subst']
                 else:
-                    pass # past the last point, just keep rolling
-
-            # if self.verbose: print(f'''*** Time: {myT}, index: {index}, state: {self.state}, substate: {self.subst} ''')
-
+                    pass # past the last point, just keep rolling in the same state
+            
             yield self.env.timeout(self.clock)
     
     # ---
     # 
     # Data is generated here:
-    # a) generate
-    # b) send a message to inform various gents downstream
+    # a) generate mock data (STF) at random intervals; just metadata for now
+    # b) send a message to inform various agents downstream
     #
+    # ---
     def stf_generator(self):
         '''
-        Generate STFs arriving at random intervals
+        Generate STFs arriving at random intervals.
+        Notify the downstream agents via MQ and/or write to file.
         '''
         while True:
 
@@ -163,8 +163,10 @@ class DAQ:
                     f.write(json.dumps(md))
                     f.close()
             if self.sender:
+                # Augment the metadata with message type and request id
+                md['type'] = 'stf_gen'
+                md['rid']  = 1
                 self.sender.send(body=json.dumps(md))
-                # self.sender.send(destination='epictopic', body=json.dumps(md), headers={'persistent': 'true'})
                 if self.verbose: print(f'''*** Sent MQ message for STF {filename} ***''')
             self.Nstf+=1
             yield self.env.timeout(stf_arrival)
@@ -207,3 +209,5 @@ class DAQ:
 # dt = datetime.now()
 # seconds_since_epoch = dt.timestamp()
 # print(int(seconds_since_epoch))
+
+# self.sender.send(destination='epictopic', body=json.dumps(md), headers={'persistent': 'true'})

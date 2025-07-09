@@ -56,13 +56,15 @@ in the simulator class keeps watch of the states and actuates transitions.
 
 ### States and Substates
 
-Please see the README in the **DAQSIM** package folder.
+Please see the README in the **daq** package folder.
 
 
 ## Communications
 
 This agent is using ActieMQ to send notifications to the swf-data-agent and other elements of the test bed.
 The Python package _stomp-py_ needs to be installed in the current version of this interface.
+Credentials are provided via the environment variables defined for this purpose.
+
 
 
 

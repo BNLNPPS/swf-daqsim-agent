@@ -141,13 +141,12 @@ class DAQ:
     # ---
     def stf_generator(self):
         '''
-        Generate STFs at random intervals.
-        Notify the downstream agents via MQ and/or write to file, with the path specified in the destination.
-        The STF filename is generated based on the current date, time, state, and substate.
+        - Generate STFs at random intervals.
+        - Notify the downstream agents via MQ and/or write to file, with the path specified in the destination.
+        - The STF filename is generated based on the current date, time, state, and substate.
+        - The filename template: swf.20250625.<integer>.<state>.<substate>.stf
 
-        The filename template: swf.20250625.<integer>.<state>.<substate>.stf
-
-        The metadata is also generated and is used to sent to a message queue or written to a file.
+        The metadata is also generated and is used to sent to a message queue and/or written to a file.
         Currently it contains the following fields:
         - filename: the name of the STF file
         - start: the start time of the STF in YYYYMMDDHHMMSS format

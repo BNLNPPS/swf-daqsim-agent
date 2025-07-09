@@ -56,52 +56,8 @@ in the simulator class keeps watch of the states and actuates transitions.
 
 ### States and Substates
 
-This is copied here (and will be re-synced as needed) from Torre's Google Doc.
-Kept here to have it close to the code:
+Please see the README in the **DAQSIM** package folder.
 
-#### States
-* no_beam
-   * Collider not operating
-* beam
-   * Collider operating
-* run
-   * Physics running
-* calib
-   * Dedicated calibration period
-* test
-   * Testing, debugging
-   * Any substates can be present during test
-
-#### Substates
-* not_ready
-   * detector not ready for physics datataking
-   * occurs during states: no_beam, beam, calib
-* ready
-   * collider and detector ready for physics, but not declared as good for physics
-   * when declared good for physics, transitions from beam/ready to run/physics
-   * occurs during states: beam
-* physics
-   * collider and detector declared good for physics
-   * if collider or detector drop out of good for physics, state transitions out of ‘run’ to ‘beam’ (or ‘off’ as appropriate)
-   * occurs during states: run
-* standby
-   * collider and detector still good for physics, but standing by, not physics datataking (dead time!)
-   * occurs during states: run
-* lumi
-   * detector, machine data that is input to luminosity calculations
-   * occurs during states: beam, run
-* eic
-   * machine data, machine configuration
-   * occurs during states: all
-* epic
-   * detector configuration, data
-   * occurs during states: all
-* daq
-   * info, config transmitted from DAQ
-   * occurs during states: all
-* calib
-   * a catch-all for a great many calib data types, we can start small
-   * occurs during states: all (assuming there are cases where calib data is taken during beam on)
 
 ## Communications
 

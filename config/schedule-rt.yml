@@ -1,5 +1,9 @@
-# The daqsim-agent schedule
-# time span (duration) format is tuple with no spaces: weeks,days,hours,minutes,seconds
+# The daqsim-agent schedule (schedule-rt.yml) defines the states and substates of the DAQ system,
+# the time spans for each state and substate, and the transitions between them.
+# The schedule is used to control the simulation of the DAQ system, allowing it to move
+# through different states and substates, simulating the data acquisition process.
+#
+# Time span (duration) format is tuple with no spaces: weeks,days,hours,minutes,seconds
 
 - state:    no_beam
   substate: calib

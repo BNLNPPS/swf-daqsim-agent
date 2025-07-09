@@ -56,8 +56,8 @@ in the simulator class keeps watch of the states and actuates transitions.
 
 ### States and Substates
 
-Please see the README in the **daq** package folder.
-
+Please see the README in the **daq** package folder:
+https://github.com/BNLNPPS/swf-daqsim-agent/tree/main/daq#states-substates
 
 ## Communications
 

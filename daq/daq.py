@@ -12,6 +12,7 @@ from   datetime import datetime as dt
 class Monitor():
     ''' The Monitor class is used to record the time series of the parameters of choice,
         as the simulation is progressing through time steps.
+        NB. Work in progress, to be implemented yet.
     '''
 
     def __init__(self, size=0):
@@ -23,6 +24,11 @@ class Monitor():
 
 ###################################################################################
 class DAQ:
+    ''' The DAQ class is the main simulation class, which reads the schedule from a YAML file,
+        simulates the data acquisition process, and generates simulated Super Time Frame data (STFs)
+        at random intervals within the specified limits optionally writing them to filea
+        and/or sending a message to a message queue (MQ) for further processing.
+        The class uses SimPy for event simulation and can be configured to run in real-time or accelerated time.'''
     def __init__(self,
                  schedule_f=None,
                  destination='',
@@ -34,11 +40,11 @@ class DAQ:
                  verbose=False,
                  sender=None):
         self.state      = None          # current state of the DAQ, undergoes changes in time
-        self.subst      = None          # current substate of the DAQ, undergoes changes in time
+        self.substate   = None          # current substate of the DAQ, undergoes changes in time
         self.schedule_f = schedule_f    # filename, of the YAML definition of the schefule
         self.destination= destination   # folder for the output data, if empty do not write
         self.schedule   = None          # the actual schedule (a dictionary), to be filled later
-        self.index      = 0             # current index into the schedule
+        self.index      = 0             # current index into the schedule (currently a list of points)
         self.verbose    = verbose       #
         self.until      = until         # total duration of the sim
         self.clock      = clock         # scheduler clock
@@ -72,9 +78,9 @@ class DAQ:
             current+=interval.total_seconds()
             self.points.append(current)
 
-        self.state = self.schedule[0]['state']
-        self.subst = self.schedule[0]['subst']
-        self.end   = self.points[-1]
+        self.state      = self.schedule[0]['state']
+        self.substate   = self.schedule[0]['substate']
+        self.end        = self.points[-1]
 
         if self.verbose: print(f'''*** The end of the defined schedule is at {self.end}s ***''')
         if self.until is None:
@@ -92,11 +98,11 @@ class DAQ:
     # ---
     def metadata(self, filename, start, end):
         md ={
-                'filename': filename,
-                'start':    start.strftime("%Y%m%d%H%M%S"),
-                'end':      end.strftime("%Y%m%d%H%M%S"),
-                'state':    self.state,
-                'subst':    self.subst
+                'filename':     filename,
+                'start':        start.strftime("%Y%m%d%H%M%S"),
+                'end':          end.strftime("%Y%m%d%H%M%S"),
+                'state':        self.state,
+                'substate':     self.substate
             }
         return md
 
@@ -105,7 +111,10 @@ class DAQ:
     ########################### Core Simulation code ###########################
     # ---
     def simulate(self):
-        # Create real-time environment (e.g. factor=0.1 means 10x speed, etc)
+        '''
+        Create real-time environment (e.g. factor=0.1 means 10x speed, etc).
+        '''
+    
         self.env = simpy.rt.RealtimeEnvironment(factor=self.factor, strict=False)
         self.env.process(self.sched()) # the schedule minder
         self.env.process(self.stf_generator()) # the DAQ payload to process in each step
@@ -120,26 +129,37 @@ class DAQ:
             myT     = int(self.env.now)
             index = bisect.bisect_right(self.points, myT) - 1 # Find the index of the current schedule entry
             if index!=self.index:
-                if index<len(self.schedule): # state/substate transition
+                if index<len(self.schedule): # state/substateate transition
                     self.index=index
                     self.state=self.schedule[index]['state']
-                    self.subst=self.schedule[index]['subst']
+                    self.substate=self.schedule[index]['substate']
                 else:
                     pass # past the last point, just keep rolling in the same state
             
             yield self.env.timeout(self.clock)
     
     # ---
-    # 
-    # Data is generated here:
-    # a) generate mock data (STF) at random intervals; just metadata for now
-    # b) send a message to inform various agents downstream
-    #
-    # ---
     def stf_generator(self):
         '''
-        Generate STFs arriving at random intervals.
-        Notify the downstream agents via MQ and/or write to file.
+        Generate STFs at random intervals.
+        Notify the downstream agents via MQ and/or write to file, with the path specified in the destination.
+        The STF filename is generated based on the current date, time, state, and substate.
+
+        The filename template: swf.20250625.<integer>.<state>.<substate>.stf
+
+        The metadata is also generated and is used to sent to a message queue or written to a file.
+        Currently it contains the following fields:
+        - filename: the name of the STF file
+        - start: the start time of the STF in YYYYMMDDHHMMSS format
+        - end: the end time of the STF in YYYYMMDDHHMMSS format
+        - state: the current state of the DAQ
+        - substate: the current substate of the DAQ
+
+        The last two fields are only present in the MQ messages, the preceding ones are written to the file.
+
+        The STF generation is controlled by the low and high limits for the arrival time of the STF.
+        It is done in real-time, with the time axis controlled by the SimPy environment.
+
         '''
         while True:
 
@@ -151,8 +171,8 @@ class DAQ:
             formatted_date = build_end.strftime("%Y%m%d")             # ("%Y-%m-%d %H:%M:%S")
             formatted_time = build_end.strftime("%H%M%S")
 
-            # The filename template: swf.20250625.<integer>.<state>.<substate>.stf
-            filename = f'''swf.{formatted_date}.{formatted_time}.{self.state}.{self.subst}.stf'''
+            # The filename template: swf.20250625.<integer>.<state>.<substateate>.stf
+            filename = f'''swf.{formatted_date}.{formatted_time}.{self.state}.{self.substate}.stf'''
 
             md = self.metadata(filename, build_start, build_end)
 
@@ -163,9 +183,9 @@ class DAQ:
                     f.write(json.dumps(md))
                     f.close()
             if self.sender:
-                # Augment the metadata with message type and request id
-                md['type'] = 'stf_gen'
-                md['rid']  = 1
+                # For purposes of the MQ communications, augment the metadata with message type and request id
+                md['msg_type']  = 'stf_gen'
+                md['req_id']    = 1
                 self.sender.send(body=json.dumps(md))
                 if self.verbose: print(f'''*** Sent MQ message for STF {filename} ***''')
             self.Nstf+=1

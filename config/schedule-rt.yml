@@ -1,22 +1,22 @@
 # The daqsim-agent schedule
 # time span (duration) format is tuple with no spaces: weeks,days,hours,minutes,seconds
 
-- state:  no_beam
-  subst:  calib
-  span:   0,0,0,0,10
+- state:    no_beam
+  substate: calib
+  span:     0,0,0,0,10
 
-- state:  beam
-  subst:  not_ready
-  span:   0,0,0,0,10
+- state:    beam
+  substate: not_ready
+  span:     0,0,0,0,10
 
-- state:  beam
-  subst:  ready
-  span:   0,0,0,0,10
+- state:    beam
+  substate: ready
+  span:     0,0,0,0,10
 
-- state:  run
-  subst:  standby
-  span:   0,0,0,0,10
+- state:    run
+  substate: standby
+  span:     0,0,0,0,10
 
-- state:  run
-  subst:  physics
-  span:   0,0,0,1,0
+- state:    run
+  substate: physics
+  span:     0,0,0,1,0

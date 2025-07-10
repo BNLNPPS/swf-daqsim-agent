@@ -79,6 +79,21 @@ the following example:
 }
 ```
 
+The last two elements in this dictionary are added on top of the metadata generated
+for each simulated STF file, so the content above these trailing two is identical
+between the metadata and the MQ message.
+
+The file metadata is formed using this piece of Python code, presented here to elucidate
+the format:
+```python
+md ={
+    'filename':     filename,
+    'start':        start.strftime("%Y%m%d%H%M%S"),
+    'end':          end.strftime("%Y%m%d%H%M%S"),
+    'state':        self.state,
+    'substate':     self.substate
+    }
+```
 
 
 

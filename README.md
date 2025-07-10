@@ -61,9 +61,23 @@ https://github.com/BNLNPPS/swf-daqsim-agent/tree/main/daq#states-substates
 
 ## Communications
 
-This agent is using ActieMQ to send notifications to the swf-data-agent and other elements of the test bed.
+This agent is using _ActieMQ_ to send notifications to the swf-data-agent and other elements of the test bed.
 The Python package _stomp-py_ needs to be installed in the current version of this interface.
-Credentials are provided via the environment variables defined for this purpose.
+
+The current format of the messages sent out to MQ by the simulator is illustrated in
+the following example:
+
+```json
+{
+    "filename": "swf.20250707.190903.run.physics.stf",
+    "start": "20250707190900",
+    "end": "20250707190903",
+    "state": "run",
+    "subst": "physics",
+    "msg_type": "stf_gen",
+    "req_id": 1
+}
+```
 
 
 

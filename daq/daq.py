@@ -82,18 +82,17 @@ class DAQ:
         self.substate   = self.schedule[0]['substate']
         self.end        = self.points[-1]
 
-        if self.verbose: print(f'''*** The end of the defined schedule is at {self.end}s ***''')
+        if self.verbose:        print(f'''*** The end of the defined schedule is at {self.end}s ***''')
         if self.until is None:
-            if self.verbose: print(f'''*** Will stop simulation at the end of schedle defined in {self.schedule_f} ***''')
+            if self.verbose:    print(f'''*** Will stop simulation at the end of schedle defined in {self.schedule_f} ***''')
             self.until = self.end
         else:
-            if self.verbose: print(f'''*** Will run simulation until {self.until}s per command line options***''')
+            if self.verbose:    print(f'''*** Will run simulation until {self.until}s per command line options***''')
 
     # ---
     def get_time(self):
-        """Get current simulation time formatted"""
+        """Get the current simulation time formatted"""
         return f"{self.env.now:.1f}s"
-
 
     # ---
     def metadata(self, filename, start, end):
@@ -109,19 +108,43 @@ class DAQ:
     
     ############################################################################
     ########################### Core Simulation code ###########################
+    ############################################################################
     # ---
-    def simulate(self):
-        '''
-        Create real-time environment (e.g. factor=0.1 means 10x speed, etc).
-        '''
     
+    def start_run(self):
+        '''
+        Start the simulation run, create the SimPy environment and register the processes.
+        This method is called to initialize the simulation environment and start the processes.
+        '''
+        if self.verbose: print(f'''*** Starting the DAQ simulation run ***''')
+        
+        # Create a real-time environment with the specified factor
         self.env = simpy.rt.RealtimeEnvironment(factor=self.factor, strict=False)
-        self.env.process(self.sched()) # the schedule minder
-        self.env.process(self.stf_generator()) # the DAQ payload to process in each step
+        
+        # Register the schedule minder and the STF generator processes with the environment
+        self.env.process(self.sched())          # the schedule minder
+        self.env.process(self.stf_generator())  # the DAQ payload to process in each step
+    
+    def end_run(self):
+        '''
+        End the simulation run, clean up resources and print the summary.
+        This method is called to finalize the simulation and print the results.
+        '''
+        if self.verbose:
+            print(f'''*** Ending the DAQ simulation run ***''')
+            print(f'''*** Total number of STFs generated: {self.Nstf} ***''')
+  
+    
+    
+    def run(self):
+        self.start_run()  # Initialize the simulation environment and processes
+        
         try:
             self.env.run(until=self.until)
         except KeyboardInterrupt:
             print("\nSimulation interrupted by user")
+            
+        self.end_run()  # Finalize the simulation and print the results
 
     # ---
     def sched(self): # keeps track of the state changes as defined in the schedule

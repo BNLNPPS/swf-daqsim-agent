@@ -114,7 +114,8 @@ daq = DAQ(schedule_f    = schedule,
           verbose       = verbose,
           sender        = sndr
           )
-daq.simulate()
+
+daq.run()
 
 print('---')
 if verbose:

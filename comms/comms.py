@@ -82,7 +82,7 @@ class Sender(Messenger):
 
     # ---
     def connect(self):
-        print('** Sender connecting to ActiveMQ server... **', self.verbose)
+        if self.verbose: print('*** Sender connecting to ActiveMQ server... ***')
         try:
             self.conn.connect(login=self.username, passcode=self.password, wait=True, version='1.2')
             if self.conn.is_connected():

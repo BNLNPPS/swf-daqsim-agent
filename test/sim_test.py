@@ -12,7 +12,10 @@ def func(to_print):
 # ---
 parser = argparse.ArgumentParser()
 parser.add_argument("-v", "--verbose",  action='store_true',    help="Verbose mode")
-parser.add_argument("-m", "--mq",       action='store_true',    help="Send messages to MQ",                     default=False)
+
+parser.add_argument("-S", "--send",     action='store_true',    help="Send messages to MQ",                     default=False)
+parser.add_argument("-R", "--receive",  action='store_true',    help="Receive messages from MQ",                default=False)
+
 parser.add_argument("-s", "--schedule", type=str,               help='Path to the schedule (YAML)',             default='')
 
 parser.add_argument("-f", "--factor",   type=float,             help='Time factor',                             default=1.0)
@@ -26,10 +29,12 @@ parser.add_argument("-H", "--high",     type=float,             help='The "high"
 
 args        = parser.parse_args()
 verbose     = args.verbose
-mq    = args.mq
+
+send        = args.send
+receive     = args.receive
 
 if verbose: print(f'''*** Verbose mode is set to {verbose} ***''')
-if verbose: print(f'''*** MQ mode is set to {mq} ***''')
+if verbose: print(f'''*** Send mode is set to {send}, receive more set to {receive} ***''')
 
 schedule    = args.schedule
 dest        = args.dest
@@ -77,12 +82,12 @@ except:
 sndr = None
 rcvr = None
 
-if mq:
+if send:
     try:
-        from comms import Sender, Receiver
-        if verbose: print(f'''*** Successfuly imported the Sender and Receiver from comms ***''')
+        from comms import Sender
+        if verbose: print(f'''*** Successfuly imported the Senderfrom comms ***''')
     except:
-        print('*** Failed to import the Sender and Receiver from comms, exiting...***')
+        print('*** Failed to import the Sender from comms, exiting...***')
         exit(-1)
 
     try:
@@ -90,11 +95,18 @@ if mq:
         sndr.connect()
         if verbose: print(f'''*** Successfully instantiated and connected the Sender, will send messages to MQ ***''')
     except:
-        print('*** Failed to instantiate the Messenger, exiting...***')
+        print('*** Failed to instantiate the Sender, exiting...***')
         exit(-1)
 
 
-
+if receive:
+    try:
+        from comms import Receiver
+        if verbose: print(f'''*** Successfully imported the Receiver from comms ***''')
+    except:
+        print('*** Failed to import the Receiver from comms, exiting...***')
+        exit(-1)
+    
     try:
         rcvr = Receiver(verbose=verbose, processor=func) # a function to process received messages
         rcvr.connect()
@@ -122,11 +134,13 @@ if verbose:
     print(f'''*** Completed at {daq.get_time()}. Number of STFs generated: {daq.Nstf} ***''')
     print(f'''*** Disconnecting MQ communications ***''')
 
-if mq:
+if send:
     if sndr:
         sndr.disconnect()
+if receive:
     if rcvr:
         rcvr.disconnect()
+
 print('---')
 
 

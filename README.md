@@ -73,7 +73,7 @@ the following example:
     "start": "20250707190900",
     "end": "20250707190903",
     "state": "run",
-    "subst": "physics",
+    "substate": "physics",
     "msg_type": "stf_gen",
     "req_id": 1
 }

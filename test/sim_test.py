@@ -96,7 +96,7 @@ rcvr = None
 if send:
     try:
         from comms import Sender
-        if verbose: print(f'''*** Successfuly imported the Senderfrom comms ***''')
+        if verbose: print(f'''*** Successfuly imported the Sender from comms ***''')
     except:
         print('*** Failed to import the Sender from comms, exiting...***')
         exit(-1)

@@ -6,7 +6,12 @@ import datetime
 import bisect
 import json
 from   datetime import datetime as dt
-# from   .comms import Messenger   
+
+# ---
+def current_time():
+    ''' Returns the current time in a specific format for use in filenames and metadata. '''
+    return dt.now().strftime("%Y%m%d%H%M%S%f")
+
 
 ###################################################################################
 class Monitor():
@@ -55,6 +60,9 @@ class DAQ:
         self.end        = 0.0           # will be updated -- the last of the points
         self.Nstf       = 0             # counter of the generated STFs
         self.sender     = sender        # the MQ sender, if any
+        self.run_id     = ''            # to be filled later, the run name/number etc
+        self.run_start  = ''            # the start time of the run, to be used in the metadata
+        self.run_stop   = ''            # the stop time of the run, to be used in the metadata
 
         self.read_schedule()
 
@@ -68,11 +76,18 @@ class DAQ:
 
         self.schedule = yaml.safe_load(f)
         
-        current = 0.0 # the origin: start populating the array of scheduling points
+        current = 0.0 # the time origin: start populating the array of scheduling points
         self.points.append(current)
 
         for point in self.schedule: # span example: 0,0,0,1,0 - weeks, days, hours, minutes, seconds
-            x = [int(p) for p in point['span'].split(',')]
+            x = [int(p) for p in point['span'].split(',')] # parse the span into a list of integers
+            if len(x) != 5:
+                print(f'''Error in the schedule file {self.schedule_f}, span must be a comma-separated list of 5 integers, got {point['span']}''')
+                exit(-1)
+            
+            # Create a timedelta object from the parsed span and convert it to seconds to update the current time
+            # e.g. 0,0,0,1,0 -> 60 seconds
+            
             interval = datetime.timedelta(weeks=x[0], days=x[1], hours=x[2], minutes=x[3], seconds=x[4])
             if self.verbose: print(f'''*** {point['state']}, {interval.total_seconds()}s ***''')
             current+=interval.total_seconds()
@@ -91,7 +106,7 @@ class DAQ:
 
     # ---
     def get_time(self):
-        """Get the current simulation time formatted"""
+        """Get the current simulation time, according to the SimPy environment, formatted"""
         return f"{self.env.now:.1f}s"
 
     # ---
@@ -105,6 +120,41 @@ class DAQ:
             }
         return md
 
+    # ---
+    def mq_run_start_message(self):
+        '''
+        Create a message to be sent to MQ about the start of the run.
+        This part will evolve as the development progresses, but for now it is a simple JSON message.
+        '''
+        msg = {}
+        ts = current_time()
+        self.run_id = ts # Generate a unique run ID based on the current date and time
+        self.run_start = ts
+        msg['msg_type']  = 'start_run'
+        msg['req_id']    = 1
+        msg['run_id']    = self.run_id
+        msg['run_start'] = self.run_start
+        
+        return json.dumps(msg)
+    
+    # ---
+    def mq_stf_message(self, md):
+        '''
+        Create a message to be sent to MQ about the STF creation.
+        This part will evolve as the development progresses, but for now it is a simple JSON message.
+        '''
+        md['msg_type']  = 'stf_gen'
+        md['req_id']    = 1
+        return json.dumps(md)
+
+    # ---
+    def __str__(self):
+        return f'''DAQ Simulation: state={self.state}, substate={self.substate}, until={self.until}, clock={self.clock}, factor={self.factor}, low={self.low}, high={self.high}'''
+
+    # ---
+    def __repr__(self):
+        return self.__str__()
+    
     
     ############################################################################
     ########################### Core Simulation code ###########################
@@ -124,6 +174,8 @@ class DAQ:
         # Register the schedule minder and the STF generator processes with the environment
         self.env.process(self.sched())          # the schedule minder
         self.env.process(self.stf_generator())  # the DAQ payload to process in each step
+        
+        print('---------------------------------------', self.mq_run_start_message())  # Print the initial time
     
     def end_run(self):
         '''
@@ -205,10 +257,7 @@ class DAQ:
                     f.write(json.dumps(md))
                     f.close()
             if self.sender:
-                # For purposes of the MQ communications, augment the metadata with message type and request id
-                md['msg_type']  = 'stf_gen'
-                md['req_id']    = 1
-                self.sender.send(body=json.dumps(md))
+                self.sender.send(destination='epictopic', body=self.mq_stf_message(md), headers={'persistent': 'true'})
                 if self.verbose: print(f'''*** Sent MQ message for STF {filename} ***''')
             self.Nstf+=1
             yield self.env.timeout(stf_arrival)

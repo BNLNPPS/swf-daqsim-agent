@@ -142,7 +142,7 @@ daq.run()
 
 print('---')
 if verbose:
-    print(f'''*** Completed at {daq.get_time()}. Number of STFs generated: {daq.Nstf} ***''')
+    print(f'''*** Completed at {daq.get_simpy_time()}. Number of STFs generated: {daq.Nstf} ***''')
     print(f'''*** Disconnecting MQ communications ***''')
 
 if send:

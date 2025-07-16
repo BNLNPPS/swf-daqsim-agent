@@ -105,7 +105,7 @@ class DAQ:
             if self.verbose:    print(f'''*** Will run simulation until {self.until}s per command line options***''')
 
     # ---
-    def get_time(self):
+    def get_simpy_time(self):
         """Get the current simulation time, according to the SimPy environment, formatted"""
         return f"{self.env.now:.1f}s"
 
@@ -128,12 +128,28 @@ class DAQ:
         '''
         msg = {}
         ts = current_time()
-        self.run_id = ts # Generate a unique run ID based on the current date and time
-        self.run_start = ts
-        msg['msg_type']  = 'start_run'
-        msg['req_id']    = 1
-        msg['run_id']    = self.run_id
-        msg['run_start'] = self.run_start
+        self.run_id         = ts # Generate a unique run ID based on the current date and time
+        self.run_start      = ts
+        msg['msg_type']     = 'start_run'
+        msg['req_id']       = 1
+        msg['run_id']       = self.run_id
+        msg['run_start']    = self.run_start
+        
+        return json.dumps(msg)
+ 
+    # ---
+    def mq_run_stop_message(self):
+        '''
+        Create a message to be sent to MQ about the stop of the run.
+        This part will evolve as the development progresses, but for now it is a simple JSON message.
+        '''
+        msg = {}
+        ts = current_time()
+        self.run_stop      = ts
+        msg['msg_type']    = 'stop_run'
+        msg['req_id']      = 1
+        msg['run_id']      = self.run_id
+        msg['run_stop']    = self.run_stop
         
         return json.dumps(msg)
     
@@ -175,13 +191,14 @@ class DAQ:
         self.env.process(self.sched())          # the schedule minder
         self.env.process(self.stf_generator())  # the DAQ payload to process in each step
         
-        print('---------------------------------------', self.mq_run_start_message())  # Print the initial time
+        print('---------------------------------------', self.mq_run_start_message())  # Print the start time
     
     def end_run(self):
         '''
         End the simulation run, clean up resources and print the summary.
         This method is called to finalize the simulation and print the results.
         '''
+        print('---------------------------------------', self.mq_run_stop_message())  # Print the stop time
         if self.verbose:
             print(f'''*** Ending the DAQ simulation run ***''')
             print(f'''*** Total number of STFs generated: {self.Nstf} ***''')

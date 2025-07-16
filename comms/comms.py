@@ -9,13 +9,22 @@ import time
 daqsim_path = os.environ.get('DAQSIM_PATH', '../')  # Default to parent directory
 if daqsim_path not in sys.path: sys.path.append(daqsim_path)
 
+# Production defaults (primary mode)
 mq_user     = os.environ.get('MQ_USER',     None) # this will fail if not set
 mq_passwd   = os.environ.get('MQ_PASSWD',   None)
-
 mq_port     = int(os.environ.get('MQ_PORT', 61612))
-
 mq_host     = os.environ.get('MQ_HOST',     'pandaserver02.sdcc.bnl.gov')
 mq_cafile   = os.environ.get('MQ_CAFILE',   daqsim_path + '/config/full-chain.pem')
+
+# Check for local development mode override
+if os.environ.get('MQ_LOCAL') == '1':
+    print("*** MQ_LOCAL=1 detected - using local development mode (no SSL) ***")
+    # Override defaults for local development
+    mq_user     = os.environ.get('MQ_USER',     'admin')
+    mq_passwd   = os.environ.get('MQ_PASSWD',   'admin')
+    mq_port     = int(os.environ.get('MQ_PORT', 61616))
+    mq_host     = os.environ.get('MQ_HOST',     'localhost')
+    mq_cafile   = None  # No SSL in local mode
 
 
 ###################################################################
@@ -46,15 +55,19 @@ class Messenger:
         self.conn = stomp.Connection(host_and_ports=[(host, port)], vhost=host,try_loopback_connect=False)
         if not self.conn: raise Exception("Connection object is not initialized.")
     
-        # Set SSL parameters for the connection
-        if not os.path.exists(mq_cafile):      
-            raise FileNotFoundError(f"MQ_CAFILE '{mq_cafile}' does not exist.")
+        # Set SSL parameters for the connection (production mode)
+        if mq_cafile:  # SSL enabled (production mode)
+            if not os.path.exists(mq_cafile):      
+                raise FileNotFoundError(f"MQ_CAFILE '{mq_cafile}' does not exist.")
 
-        self.conn.transport.set_ssl(
-            for_hosts=[(mq_host, mq_port)],
-            ca_certs=mq_cafile,
-            ssl_version=ssl.PROTOCOL_TLS_CLIENT
-        )
+            self.conn.transport.set_ssl(
+                for_hosts=[(mq_host, mq_port)],
+                ca_certs=mq_cafile,
+                ssl_version=ssl.PROTOCOL_TLS_CLIENT
+            )
+        else:  # Local development mode - no SSL
+            if self.verbose:
+                print(f"*** SSL disabled for local development mode ***")
 
     # ---
     def disconnect(self):

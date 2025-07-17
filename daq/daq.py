@@ -110,11 +110,12 @@ class DAQ:
     # ---
     def metadata(self, filename, start, end):
         md ={
+                'run_id':       self.run_id,
+                'state':        self.state,
+                'substate':     self.substate,
                 'filename':     filename,
                 'start':        start.strftime("%Y%m%d%H%M%S"),
-                'end':          end.strftime("%Y%m%d%H%M%S"),
-                'state':        self.state,
-                'substate':     self.substate
+                'end':          end.strftime("%Y%m%d%H%M%S")
             }
         return md
 

@@ -1,16 +1,14 @@
 # foundation packages
 import numpy as np
-import simpy, yaml
-import random
+import simpy, yaml, uuid, random, json
 import datetime
-import bisect
-import json
 from   datetime import datetime as dt
+import bisect
 
 # ---
 def current_time():
     ''' Returns the current time in a specific format for use in filenames and metadata. '''
-    return dt.now().strftime("%Y%m%d%H%M%S%f")
+    return dt.now().strftime("%Y%m%d%H%M%S")
 
 
 ###################################################################################
@@ -128,12 +126,12 @@ class DAQ:
         '''
         msg = {}
         ts = current_time()
-        self.run_id         = ts # Generate a unique run ID based on the current date and time
+        self.run_id         = str(uuid.uuid1()) # Generate a unique run ID based on the time
         self.run_start      = ts
         msg['msg_type']     = 'start_run'
         msg['req_id']       = 1
         msg['run_id']       = self.run_id
-        msg['run_start']    = self.run_start
+        msg['ts']           = self.run_start
         
         return json.dumps(msg)
  
@@ -145,11 +143,11 @@ class DAQ:
         '''
         msg = {}
         ts = current_time()
-        self.run_stop      = ts
-        msg['msg_type']    = 'stop_run'
-        msg['req_id']      = 1
-        msg['run_id']      = self.run_id
-        msg['run_stop']    = self.run_stop
+        self.run_stop       = ts
+        msg['msg_type']     = 'stop_run'
+        msg['req_id']       = 1
+        msg['run_id']       = self.run_id
+        msg['ts']           = self.run_stop
         
         return json.dumps(msg)
     
@@ -191,14 +189,19 @@ class DAQ:
         self.env.process(self.sched())          # the schedule minder
         self.env.process(self.stf_generator())  # the DAQ payload to process in each step
         
-        print('---------------------------------------', self.mq_run_start_message())  # Print the start time
+        if self.sender:
+            self.sender.send(destination='epictopic', body=self.mq_run_start_message(), headers={'persistent': 'true'})
+            if self.verbose: print(f'''*** Sent MQ message for start of run {str(self.run_id)} ***''')
     
     def end_run(self):
         '''
         End the simulation run, clean up resources and print the summary.
         This method is called to finalize the simulation and print the results.
         '''
-        print('---------------------------------------', self.mq_run_stop_message())  # Print the stop time
+        if self.sender:
+            self.sender.send(destination='epictopic', body=self.mq_run_stop_message(), headers={'persistent': 'true'})
+            if self.verbose: print(f'''*** Sent MQ message for stop of run {str(self.run_id)} ***''')
+    
         if self.verbose:
             print(f'''*** Ending the DAQ simulation run ***''')
             print(f'''*** Total number of STFs generated: {self.Nstf} ***''')

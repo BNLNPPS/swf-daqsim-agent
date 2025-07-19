@@ -62,18 +62,39 @@ https://github.com/BNLNPPS/swf-daqsim-agent/tree/main/daq#states-substates
 ## Communications
 
 This agent is using _ActieMQ_ to send notifications to the swf-data-agent and other elements of the test bed.
-The Python package _stomp-py_ needs to be installed in the current version of this interface.
+The Python package _stomp-py_ needs to be installed to support the current version of this interface.
 
-The current format of the messages sent out to MQ by the simulator is illustrated in
+There are two types of messages: the run status messages (start/stop), and STF generation messages,
+notifying the system that a STF has been created.
+
+### Run Status Messages
+
+These messages carry the unique run ID (currently implemented using UUID strings) and the time stamp.
+Examples:
+
+```json
+{"msg_type": "start_run", "req_id": 1, "run_id": "558cc720-643a-11f0-a80a-00163e105405", "ts": "20250718205015"}
+{"msg_type": "stop_run",  "req_id": 1, "run_id": "558cc720-643a-11f0-a80a-00163e105405", "ts": "20250718205017"}
+```
+
+The timestamp convention is %Y%m%d%H%M%S.
+
+### STF Generation Message
+
+The STF generation message carries an attribute specifying the run ID, to simplify
+accounting and adata management procedures.
+
+The format of the messages sent out to MQ by the simulator is illustrated in
 the following example:
 
 ```json
 {
-    "filename": "swf.20250707.190903.run.physics.stf",
-    "start": "20250707190900",
-    "end": "20250707190903",
+    "run_id": "558cc720-643a-11f0-a80a-00163e105405",
     "state": "run",
     "substate": "physics",
+    "filename": "swf.20250718.205021.run.physics.stf",
+    "start": "20250718205017",
+    "end": "20250718205021",
     "msg_type": "stf_gen",
     "req_id": 1
 }
@@ -84,16 +105,20 @@ for each simulated STF file, so the content above these trailing two is identica
 between the metadata and the MQ message.
 
 The file metadata is formed using this piece of Python code, presented here to elucidate
-the format:
+the metadata format. This is from a method of the generator:
+
 ```python
 md ={
+    'run_id':       self.run_id,
+    'state':        self.state,
+    'substate':     self.substate,
     'filename':     filename,
     'start':        start.strftime("%Y%m%d%H%M%S"),
-    'end':          end.strftime("%Y%m%d%H%M%S"),
-    'state':        self.state,
-    'substate':     self.substate
-    }
+    'end':          end.strftime("%Y%m%d%H%M%S")
+}
 ```
+
+The _start_ and _end_ attributes relate to the start of the STF generation and its end.
 
 
 

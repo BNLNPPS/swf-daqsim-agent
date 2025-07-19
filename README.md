@@ -69,7 +69,7 @@ notifying the system that a STF has been created.
 
 ### Run Status Messages
 
-These messages carry the unique run ID (currently implemented using UUID strings) and the time stamp.
+These messages carry the unique run ID (currently implemented using UUID strings) and the timestamp.
 Examples:
 
 ```json
@@ -77,7 +77,7 @@ Examples:
 {"msg_type": "stop_run",  "req_id": 1, "run_id": "558cc720-643a-11f0-a80a-00163e105405", "ts": "20250718205017"}
 ```
 
-The timestamp convention is %Y%m%d%H%M%S.
+The timestamp convention is **%Y%m%d%H%M%S**.
 
 ### STF Generation Message
 

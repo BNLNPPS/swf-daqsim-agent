@@ -48,7 +48,7 @@ high        = args.high
 
 # ---
 daqsim_path=''
-comms_path=''
+MQ_COMMS_PATH=''
 
 try:
     daqsim_path=os.environ['DAQSIM_PATH']
@@ -61,13 +61,11 @@ except:
 
 
 try:
-    comms_path = os.environ['COMMS_PATH']
-    if verbose: print(f'''*** The COMMS_PATH is defined in the environment: {comms_path}, will be added to sys.path ***''')
-    if comms_path not in sys.path: sys.path.append(comms_path)
+    MQ_COMMS_PATH = os.environ['MQ_COMMS_PATH']
+    if verbose: print(f'''*** The MQ_COMMS_PATH is defined in the environment: {MQ_COMMS_PATH}, will be added to sys.path ***''')
+    if MQ_COMMS_PATH not in sys.path: sys.path.append(MQ_COMMS_PATH)
 except:
-    if verbose: print('*** The variable COMMS_PATH is undefined, will rely on PYTHONPATH and ../ ***')
-    comms_path = '../'  # Add parent to path, to enable running locally (also for data)
-    sys.path.append(comms_path)
+    if verbose: print('*** The variable MQ_COMMS_PATH is undefined, will rely on PYTHONPATH ***')
 
 if schedule=='':    schedule    = daqsim_path + "/config/schedule-rt.yml"
 if verbose:

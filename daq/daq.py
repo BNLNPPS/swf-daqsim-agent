@@ -31,7 +31,10 @@ class DAQ:
         simulates the data acquisition process, and generates simulated Super Time Frame data (STFs)
         at random intervals within the specified limits optionally writing them to filea
         and/or sending a message to a message queue (MQ) for further processing.
-        The class uses SimPy for event simulation and can be configured to run in real-time or accelerated time.'''
+        The class uses SimPy for event simulation and can be configured to run in real-time or accelerated time.
+    
+        Note that the sended is initialized externally, so that the DAQ can send messages to a message queue (MQ) if needed.  
+    '''
     def __init__(self,
                  schedule_f=None,
                  destination='',

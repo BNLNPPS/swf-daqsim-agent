@@ -93,16 +93,17 @@ rcvr = None
 
 if send:
     try:
-        from comms import Sender
-        if verbose: print(f'''*** Successfuly imported the Sender from comms ***''')
+        from mq_comms import Sender
+        if verbose: print(f'''*** Successfuly imported the Sender from mq_comms ***''')
     except:
-        print('*** Failed to import the Sender from comms, exiting...***')
+        print('*** Failed to import the Sender from mq_comms, exiting...***')
         exit(-1)
 
     try:
         sndr = Sender(verbose=verbose)
+        if verbose: print(f'''*** Successfully instantiated the Sender ***''')
         sndr.connect()
-        if verbose: print(f'''*** Successfully instantiated and connected the Sender, will send messages to MQ ***''')
+        if verbose: print(f'''*** Successfully connected the Sender to MQ ***''')
     except:
         print('*** Failed to instantiate the Sender, exiting...***')
         exit(-1)
@@ -110,7 +111,7 @@ if send:
 
 if receive:
     try:
-        from comms import Receiver
+        from mq_comms import Receiver
         if verbose: print(f'''*** Successfully imported the Receiver from comms ***''')
     except:
         print('*** Failed to import the Receiver from comms, exiting...***')

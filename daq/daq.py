@@ -1,6 +1,6 @@
 # foundation packages
 import numpy as np
-import simpy, yaml, uuid, random, json
+import simpy, yaml, random, json
 import datetime
 from   datetime import datetime as dt
 import bisect
@@ -130,8 +130,9 @@ class DAQ:
         '''
         msg = {}
         ts = current_time()
-        self.run_id         = str(uuid.uuid1()) # Generate a unique run ID based on the time
+        self.run_id         = str(ts) # Could also generate a unique run ID based on the time - uuid.uuid1()
         self.run_start      = ts
+        
         msg['msg_type']     = 'start_run'
         msg['req_id']       = 1
         msg['run_id']       = self.run_id

@@ -69,12 +69,16 @@ notifying the system that a STF has been created.
 
 ### Run Status Messages
 
-These messages carry the unique run ID (currently implemented using UUID strings) and the timestamp.
+These messages carry the unique run ID and the timestamp. In current design, we opted for using
+the string representing the start of the run timestamp as its unique ID, for better readbility.
+This is an acceptable solution because in all realistic scenarios the run manager is always
+a singleton.
+
 Examples:
 
 ```json
-{"msg_type": "start_run", "req_id": 1, "run_id": "558cc720-643a-11f0-a80a-00163e105405", "ts": "20250718205015"}
-{"msg_type": "stop_run",  "req_id": 1, "run_id": "558cc720-643a-11f0-a80a-00163e105405", "ts": "20250718205017"}
+{"msg_type": "start_run", "req_id": 1, "run_id": "20250718205015", "ts": "20250718205015"}
+{"msg_type": "stop_run",  "req_id": 1, "run_id": "20250718205015", "ts": "20250718205017"}
 ```
 
 The timestamp convention is **%Y%m%d%H%M%S**.
@@ -89,7 +93,7 @@ the following example:
 
 ```json
 {
-    "run_id": "558cc720-643a-11f0-a80a-00163e105405",
+    "run_id": "20250718205015",
     "state": "run",
     "substate": "physics",
     "filename": "swf.20250718.205021.run.physics.stf",

@@ -64,6 +64,12 @@ https://github.com/BNLNPPS/swf-daqsim-agent/tree/main/daq#states-substates
 This agent is using _ActieMQ_ to send notifications to the swf-data-agent and other elements of the test bed.
 The Python package _stomp-py_ needs to be installed to support the current version of this interface.
 
+**For the ActiveMQ communications to work, the following evironment variables need to be set**
+* MQ_PASSWD
+* MQ_USER
+* MQ_CAFILE
+
+
 There are two types of messages: the run status messages (start/stop), and STF generation messages,
 notifying the system that a STF has been created.
 

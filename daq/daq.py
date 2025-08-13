@@ -201,7 +201,7 @@ class DAQ:
         msg = {}
         ts = current_time()
         self.run_stop       = ts
-        msg['msg_type']     = 'stop_run'
+        msg['msg_type']     = 'end_run'
         msg['req_id']       = 1
         msg['run_id']       = self.run_id
         msg['ts']           = self.run_stop
@@ -332,7 +332,12 @@ class DAQ:
             filename = f'''swf.{formatted_date}.{formatted_time}.{self.state}.{self.substate}.stf'''
 
             md = self.metadata(filename, build_start, build_end)
+            
+            # This is provisionl until we have a real STF file to write
+            # For now, we just create a JSON message with the metadata
+            # and send it to the message queue, if the sender is initialized
             data = json.dumps(md)
+            
             if self.destination:
                 dfilename = f"{self.destination}/{filename}"
                 # Here we would write the STF to the file, and send a notification to a message queue
@@ -344,7 +349,7 @@ class DAQ:
                 if self.verbose: print(f'''*** Wrote STF to file {dfilename}, Adler-32 checksum: {adler}, size: {size} ***''')
 
             # Augment the metadata with the checksum and size, to be sent to MQ
-            md['adler32'] = adler
+            md['checksum'] = f'''ad:{str(adler)}'''  # Adler-32 checksum
             md['size']    = size
         
             if self.sender:

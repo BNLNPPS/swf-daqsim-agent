@@ -92,7 +92,8 @@ The timestamp convention is **%Y%m%d%H%M%S**.
 ### STF Generation Message
 
 The STF generation message carries an attribute specifying the run ID, to simplify
-accounting and adata management procedures.
+accounting and adata management procedures. It also contains attributes relevant
+to data handling downstream, such as the checksum (_adler32_) and size, in bytes.
 
 The format of the messages sent out to MQ by the simulator is illustrated in
 the following example:
@@ -105,6 +106,8 @@ the following example:
     "filename": "swf.20250718.205021.run.physics.stf",
     "start": "20250718205017",
     "end": "20250718205021",
+    "adler32": 3719114152,
+    "size": 170, 
     "msg_type": "stf_gen",
     "req_id": 1
 }

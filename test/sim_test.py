@@ -33,8 +33,9 @@ verbose     = args.verbose
 send        = args.send
 receive     = args.receive
 
-if verbose: print(f'''*** Verbose mode is set to {verbose} ***''')
-if verbose: print(f'''*** Send mode is set to {send}, receive more set to {receive} ***''')
+if verbose:
+    print(f'''*** Verbose mode is set to {verbose} ***''')
+    print(f'''*** Send mode is set to {send}, receive more set to {receive} ***''')
 
 schedule    = args.schedule
 dest        = args.dest
@@ -47,17 +48,25 @@ low         = args.low
 high        = args.high
 
 # ---
-daqsim_path=''
-MQ_COMMS_PATH=''
+DAQSIM_PATH         = ''
+MQ_COMMS_PATH       = ''
+SWF_COMMON_LIB_PATH = ''
 
 try:
-    daqsim_path=os.environ['DAQSIM_PATH']
-    if verbose: print(f'''*** The DAQSIM_PATH is defined in the environment: {daqsim_path}, will be added to sys.path ***''')
-    sys.path.append(daqsim_path)
+    SWF_COMMON_LIB_PATH = os.environ['SWF_COMMON_LIB_PATH']
+    if verbose: print(f'''*** The SWF_COMMON_LIB_PATH is defined in the environment: {SWF_COMMON_LIB_PATH}, will be added to sys.path ***''')
+    if SWF_COMMON_LIB_PATH not in sys.path: sys.path.append(SWF_COMMON_LIB_PATH)
+except:
+    if verbose: print('*** The variable SWF_COMMON_LIB_PATH is undefined, will rely on PYTHONPATH ***')
+
+try:
+    DAQSIM_PATH=os.environ['DAQSIM_PATH']
+    if verbose: print(f'''*** The DAQSIM_PATH is defined in the environment: {DAQSIM_PATH}, will be added to sys.path ***''')
+    sys.path.append(DAQSIM_PATH)
 except:
     if verbose: print('*** The variable DAQSIM_PATH is undefined, will rely on PYTHONPATH and ../ ***')
-    daqsim_path = '../'  # Add parent to path, to enable running locally (also for data)
-    sys.path.append(daqsim_path)
+    DAQSIM_PATH = '../'  # Add parent to path, to enable running locally (also for data)
+    sys.path.append(DAQSIM_PATH)
 
 
 try:
@@ -67,7 +76,7 @@ try:
 except:
     if verbose: print('*** The variable MQ_COMMS_PATH is undefined, will rely on PYTHONPATH ***')
 
-if schedule=='':    schedule    = daqsim_path + "/config/schedule-rt.yml"
+if schedule=='':    schedule    = DAQSIM_PATH + "/config/schedule-rt.yml"
 if verbose:
     print(f'''*** Set the Python path: {sys.path} ***''')
     print(f'''*** Schedule description file path: {schedule} ***''')

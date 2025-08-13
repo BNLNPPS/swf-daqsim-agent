@@ -1,9 +1,61 @@
 # foundation packages
 import numpy as np
-import simpy, yaml, random, json
+import simpy, yaml, random, json, bisect, zlib, os
 import datetime
 from   datetime import datetime as dt
-import bisect
+
+
+# ---
+def calculate_adler32_from_file(file_path, chunk_size=4096):
+    """
+    Calculates the Adler-32 checksum of a file.
+
+    Args:
+        filepath (str): The path to the file.
+        chunk_size (int): The size of chunks to read from the file.
+
+    Returns:
+        int: The Adler-32 checksum of the file.
+    """
+    adler32_checksum = 1  # Initial Adler-32 value
+
+    try:
+        with open(file_path, 'rb') as f:
+            while True:
+                chunk = f.read(chunk_size)
+                if not chunk:
+                    break
+                adler32_checksum = zlib.adler32(chunk, adler32_checksum)
+        return adler32_checksum & 0xffffffff  # Ensure 32-bit unsigned result
+    except:
+        print(f"Problem with file {file_path}")
+        exit(-2)
+
+
+# ---
+def get_file_size(file_path):
+    """
+    Returns the size of the file at the given path in bytes.
+    
+    Args:
+        file_path (str): The path to the file.
+    
+    Returns:
+        int: The size of the file in bytes, or None if the file does not exist.
+    """
+
+    file_size_bytes = 0
+    try:
+        file_size_bytes = os.path.getsize(file_path)
+    except:
+        print(f"Error: problem with file '{file_path}'.")
+        exit(-2)
+
+    return file_size_bytes
+# ---
+
+
+
 
 # ---
 def current_time():
@@ -274,16 +326,20 @@ class DAQ:
             filename = f'''swf.{formatted_date}.{formatted_time}.{self.state}.{self.substate}.stf'''
 
             md = self.metadata(filename, build_start, build_end)
-
+            data = json.dumps(md)
             if self.destination:
                 dfilename = f"{self.destination}/{filename}"
                 # Here we would write the STF to the file, and send a notification to a message queue
                 with open(dfilename, 'w') as f:
-                    f.write(json.dumps(md))
+                    f.write(data)
                     f.close()
+                adler = calculate_adler32_from_file(dfilename) # Calculate the Adler-32 checksum of the file
+                size  = get_file_size(dfilename)               # Get the size of the file in bytes
+                if self.verbose: print(f'''*** Wrote STF to file {dfilename}, Adler-32 checksum: {adler}, size: {size} ***''')
             if self.sender:
                 self.sender.send(destination='epictopic', body=self.mq_stf_message(md), headers={'persistent': 'true'})
                 if self.verbose: print(f'''*** Sent MQ message for STF {filename} ***''')
+
             self.Nstf+=1
             yield self.env.timeout(stf_arrival)
 

@@ -333,6 +333,9 @@ class DAQ:
 
             md = self.metadata(filename, build_start, build_end)
             
+            # For debugging purposes, print the components of the generated metadata
+            #       print(build_start, build_end, filename)
+
             # This is provisionl until we have a real STF file to write
             # For now, we just create a JSON message with the metadata
             # and send it to the message queue, if the sender is initialized

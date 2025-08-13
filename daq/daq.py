@@ -312,8 +312,14 @@ class DAQ:
         It is done in real-time, with the time axis controlled by the SimPy environment.
 
         '''
-        while True:
 
+        if self.verbose: print(f'''*** Starting the STF generator process ***''')
+        # If the destination is not specified, do not write to file, and only send messages to MQ
+        # If not writing files, these values will be placeholders in the MQ messages
+        adler = 0
+        size  = 0
+
+        while True:
             build_start = dt.now() # .strftime("%Y%m%d%H%M%S")
             stf_arrival = random.uniform(self.low, self.high)   # Time for next STF (random interval between the low/high limits)
             interval    = datetime.timedelta(seconds=stf_arrival)
@@ -336,6 +342,11 @@ class DAQ:
                 adler = calculate_adler32_from_file(dfilename) # Calculate the Adler-32 checksum of the file
                 size  = get_file_size(dfilename)               # Get the size of the file in bytes
                 if self.verbose: print(f'''*** Wrote STF to file {dfilename}, Adler-32 checksum: {adler}, size: {size} ***''')
+
+            # Augment the metadata with the checksum and size, to be sent to MQ
+            md['adler32'] = adler
+            md['size']    = size
+        
             if self.sender:
                 self.sender.send(destination='epictopic', body=self.mq_stf_message(md), headers={'persistent': 'true'})
                 if self.verbose: print(f'''*** Sent MQ message for STF {filename} ***''')

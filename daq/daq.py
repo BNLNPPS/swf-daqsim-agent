@@ -6,6 +6,9 @@ from   datetime import datetime as dt
 
 
 # ---
+timeformat = "%Y%m%d%H%M%S%f"  # Format for the STF start and end times in metadata
+
+# ---
 def calculate_adler32_from_file(file_path, chunk_size=4096):
     """
     Calculates the Adler-32 checksum of a file.
@@ -56,10 +59,12 @@ def get_file_size(file_path):
 
 
 
-
 # ---
 def current_time():
-    ''' Returns the current time in a specific format for use in filenames and metadata. '''
+    '''
+    Returns the current time in a specific format to generate run id.
+    Note that in this case we do not need the microseconds at the current stage of development.
+    '''
     return dt.now().strftime("%Y%m%d%H%M%S")
 
 
@@ -169,8 +174,8 @@ class DAQ:
                 'state':        self.state,
                 'substate':     self.substate,
                 'filename':     filename,
-                'start':        start.strftime("%Y%m%d%H%M%S"),
-                'end':          end.strftime("%Y%m%d%H%M%S")
+                'start':        start.strftime(timeformat),
+                'end':          end.strftime(timeformat)
             }
         return md
 
@@ -200,11 +205,11 @@ class DAQ:
         '''
         msg = {}
         ts = current_time()
-        self.run_stop       = ts
+        self.run_end        = ts
         msg['msg_type']     = 'end_run'
         msg['req_id']       = 1
         msg['run_id']       = self.run_id
-        msg['ts']           = self.run_stop
+        msg['ts']           = self.run_end
         
         return json.dumps(msg)
     
@@ -257,7 +262,7 @@ class DAQ:
         '''
         if self.sender:
             self.sender.send(destination='epictopic', body=self.mq_run_stop_message(), headers={'persistent': 'true'})
-            if self.verbose: print(f'''*** Sent MQ message for stop of run {str(self.run_id)} ***''')
+            if self.verbose: print(f'''*** Sent MQ message for end of run {str(self.run_id)} ***''')
     
         if self.verbose:
             print(f'''*** Ending the DAQ simulation run ***''')
@@ -301,8 +306,8 @@ class DAQ:
         The metadata is also generated and is used to sent to a message queue and/or written to a file.
         Currently it contains the following fields:
         - filename: the name of the STF file
-        - start: the start time of the STF in YYYYMMDDHHMMSS format
-        - end: the end time of the STF in YYYYMMDDHHMMSS format
+        - start: the start time of the STF in YYYYMMDDHHMMSSffffff format
+        - end: the end time of the STF in YYYYMMDDHHMMSSffffff format
         - state: the current state of the DAQ
         - substate: the current substate of the DAQ
 
@@ -327,9 +332,10 @@ class DAQ:
 
             formatted_date = build_end.strftime("%Y%m%d")             # ("%Y-%m-%d %H:%M:%S")
             formatted_time = build_end.strftime("%H%M%S")
+            formatted_us   = build_end.strftime("%f")
 
             # The filename template: swf.20250625.<integer>.<state>.<substateate>.stf
-            filename = f'''swf.{formatted_date}.{formatted_time}.{self.state}.{self.substate}.stf'''
+            filename = f'''swf.{formatted_date}.{formatted_time}.{formatted_us}.{self.state}.{self.substate}.stf'''
 
             md = self.metadata(filename, build_start, build_end)
             

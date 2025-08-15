@@ -87,7 +87,8 @@ Examples:
 {"msg_type": "stop_run",  "req_id": 1, "run_id": "20250718205015", "ts": "20250718205017"}
 ```
 
-The timestamp convention is **%Y%m%d%H%M%S**.
+The timestamp convention is **%Y%m%d%H%M%S**. This is different from the timestamp format
+in the STF message (below) which needs more granularity.
 
 ### STF Generation Message
 
@@ -100,14 +101,14 @@ the following example:
 
 ```json
 {
-    "run_id": "20250718205015",
+    "run_id": "20250815161947",
     "state": "run",
     "substate": "physics",
-    "filename": "swf.20250718.205021.run.physics.stf",
-    "start": "20250718205017",
-    "end": "20250718205021",
-    "adler32": 3719114152,
-    "size": 170, 
+    "filename": "swf.20250815.161953.306782.run.physics.stf",
+    "start": "20250815161950088492",
+    "end": "20250815161953306782",
+    "checksum": "ad:1563439560",
+    "size": 189,
     "msg_type": "stf_gen",
     "req_id": 1
 }
@@ -126,12 +127,12 @@ md ={
     'state':        self.state,
     'substate':     self.substate,
     'filename':     filename,
-    'start':        start.strftime("%Y%m%d%H%M%S"),
-    'end':          end.strftime("%Y%m%d%H%M%S")
+    'start':        start.strftime("%Y%m%d%H%M%S%f"),
+    'end':          end.strftime("%Y%m%d%H%M%S%f")
 }
 ```
 
 The _start_ and _end_ attributes relate to the start of the STF generation and its end.
-
+Microsecond precision is used to avoid overlaps and clashes.
 
 

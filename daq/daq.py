@@ -180,7 +180,7 @@ class DAQ:
         return md
 
     # ---
-    def mq_run_start_message(self):
+    def mq_start_run_message(self):
         '''
         Create a message to be sent to MQ about the start of the run.
         This part will evolve as the development progresses, but for now it is a simple JSON message.
@@ -198,7 +198,7 @@ class DAQ:
         return json.dumps(msg)
  
     # ---
-    def mq_run_stop_message(self):
+    def mq_end_run_message(self):
         '''
         Create a message to be sent to MQ about the stop of the run.
         This part will evolve as the development progresses, but for now it is a simple JSON message.
@@ -252,7 +252,7 @@ class DAQ:
         self.env.process(self.stf_generator())  # the DAQ payload to process in each step
         
         if self.sender:
-            self.sender.send(destination='epictopic', body=self.mq_run_start_message(), headers={'persistent': 'true'})
+            self.sender.send(destination='epictopic', body=self.mq_start_run_message(), headers={'persistent': 'true'})
             if self.verbose: print(f'''*** Sent MQ message for start of run {str(self.run_id)} ***''')
     
     def end_run(self):
@@ -261,7 +261,7 @@ class DAQ:
         This method is called to finalize the simulation and print the results.
         '''
         if self.sender:
-            self.sender.send(destination='epictopic', body=self.mq_run_stop_message(), headers={'persistent': 'true'})
+            self.sender.send(destination='epictopic', body=self.mq_end_run_message(), headers={'persistent': 'true'})
             if self.verbose: print(f'''*** Sent MQ message for end of run {str(self.run_id)} ***''')
     
         if self.verbose:

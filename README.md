@@ -101,14 +101,14 @@ the following example:
 
 ```json
 {
-    "run_id": "20250815161947",
-    "state": "run",
+    "run_id":   "20250815161947",
+    "state":    "run",
     "substate": "physics",
     "filename": "swf.20250815.161953.306782.run.physics.stf",
-    "start": "20250815161950088492",
-    "end": "20250815161953306782",
+    "start":    "20250815161950088492",
+    "end":      "20250815161953306782",
     "checksum": "ad:1563439560",
-    "size": 189,
+    "size":     189,
     "msg_type": "stf_gen",
     "req_id": 1
 }

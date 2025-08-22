@@ -101,7 +101,9 @@ class DAQ:
                  low=1.0,
                  high=2.0,
                  verbose=False,
-                 sender=None):
+                 sender=None,
+                 receiver=None):
+        
         self.state      = None          # current state of the DAQ, undergoes changes in time
         self.substate   = None          # current substate of the DAQ, undergoes changes in time
         self.schedule_f = schedule_f    # filename, of the YAML definition of the schefule
@@ -118,7 +120,10 @@ class DAQ:
         self.end        = 0.0           # will be updated -- the last of the points
         self.Nstf       = 0             # counter of the generated STFs
         self.sender     = sender        # the MQ sender, if any
+        self.receiver   = receiver      # the MQ receiver, if any
+        self.env        = None          # the SimPy environment, to be created later
         self.run_id     = ''            # to be filled later, the run name/number etc
+        self.run_start_ts = None        # the start time of the run, as a timestamp
         self.run_start  = ''            # the start time of the run, to be used in the metadata
         self.run_stop   = ''            # the stop time of the run, to be used in the metadata
 
@@ -179,6 +184,29 @@ class DAQ:
             }
         return md
 
+
+
+    # ---
+    def mq_run_imminent_message(self):
+        '''
+        Create a message to be sent to MQ saying that the start is imminent.
+        '''
+        msg = {}
+        
+        msg['msg_type']     = 'run_imminent'
+        msg['req_id']       = 1
+        msg['run_id']       = self.run_id
+        msg['timestamp']    = self.run_start_ts
+
+        msg['run_conditions'] = {
+                "beam_energy": "5 GeV",
+                "magnetic_field": "1.5T",
+                "detector_config": "physics",
+                "bunch_structure": "216x216"
+            }        
+        return json.dumps(msg)
+
+
     # ---
     def mq_start_run_message(self):
         '''
@@ -186,14 +214,11 @@ class DAQ:
         This part will evolve as the development progresses, but for now it is a simple JSON message.
         '''
         msg = {}
-        ts = current_time()
-        self.run_id         = str(ts) # Could also generate a unique run ID based on the time - uuid.uuid1()
-        self.run_start      = ts
         
         msg['msg_type']     = 'start_run'
         msg['req_id']       = 1
         msg['run_id']       = self.run_id
-        msg['ts']           = self.run_start
+        msg['ts']           = self.run_start_ts
         
         return json.dumps(msg)
  
@@ -243,6 +268,14 @@ class DAQ:
         This method is called to initialize the simulation environment and start the processes.
         '''
         if self.verbose: print(f'''*** Starting the DAQ simulation run ***''')
+
+        self.run_start_ts   = current_time()
+        self.run_id         = str(self.run_start_ts) # Could also generate a unique run ID based on the time - uuid.uuid1()
+
+        if self.sender:
+            self.sender.send(destination='epictopic', body=self.mq_run_imminent_message(), headers={'persistent': 'true'})
+            if self.verbose: print(f'''*** Sent MQ message that run {str(self.run_id)} is imminent ***''')
+
         
         # Create a real-time environment with the specified factor
         self.env = simpy.rt.RealtimeEnvironment(factor=self.factor, strict=False)

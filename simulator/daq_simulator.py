@@ -158,7 +158,8 @@ daq = DAQ(schedule_f    = schedule,
           low           = low,
           high          = high,
           verbose       = verbose,
-          sender        = sndr
+          sender        = sndr,
+          receiver      = rcvr
           )
 
 daq.run()

@@ -9,7 +9,8 @@ from   sys import exit
 
 def func(to_print):
     print(to_print) # a simple function to process received messages
-# ---
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument("-v", "--verbose",  action='store_true',    help="Verbose mode")
 parser.add_argument("-e", "--envtest",  action='store_true',    help="Test the environment variables and exit", default=False)

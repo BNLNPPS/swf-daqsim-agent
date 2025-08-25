@@ -94,7 +94,7 @@ class DAQ:
     '''
     def __init__(self,
                  schedule_f=None,
-                 destination='',
+                 destination=None,
                  until=None,
                  clock=1.0,
                  factor=1.0,
@@ -107,7 +107,8 @@ class DAQ:
         self.state      = None          # current state of the DAQ, undergoes changes in time
         self.substate   = None          # current substate of the DAQ, undergoes changes in time
         self.schedule_f = schedule_f    # filename, of the YAML definition of the schefule
-        self.destination= destination   # folder for the output data, if empty do not write
+        self.destination= destination   # container folder for the output data folders, if empty do not write
+        self.folder     = ''            # the actual folder for the current run, to be created later
         self.schedule   = None          # the actual schedule (a dictionary), to be filled later
         self.index      = 0             # current index into the schedule (currently a list of points)
         self.verbose    = verbose       #
@@ -191,6 +192,7 @@ class DAQ:
         '''
         Create a message to be sent to MQ saying that the start is imminent.
         '''
+        
         msg = {}
         
         msg['msg_type']     = 'run_imminent'
@@ -271,6 +273,18 @@ class DAQ:
 
         self.run_start_ts   = current_time()
         self.run_id         = str(self.run_start_ts) # Could also generate a unique run ID based on the time - uuid.uuid1()
+
+        if self.destination:
+            self.folder = f"{self.destination}/run_{self.run_id}"
+            try:
+                os.makedirs(self.folder, exist_ok=True)
+            except:
+                if self.verbose:
+                    print(f"*** Error: could not create the output folder {self.destination}/run_{self.run_id}, exiting... ***")
+                exit(-1)
+            
+            if self.verbose: print(f'''*** Created the output folder {self.destination}/run_{self.run_id} ***''')
+        
 
         if self.sender:
             self.sender.send(destination='epictopic', body=self.mq_run_imminent_message(), headers={'persistent': 'true'})
@@ -381,7 +395,7 @@ class DAQ:
             data = json.dumps(md)
             
             if self.destination:
-                dfilename = f"{self.destination}/{filename}"
+                dfilename = f"{self.folder}/{filename}"
                 # Here we would write the STF to the file, and send a notification to a message queue
                 with open(dfilename, 'w') as f:
                     f.write(data)

@@ -32,8 +32,12 @@ Regarding the Python dependencies, they are captured in the _requirements_ file 
 
 ## The Simulation
 
-At the time of writing, the prototype aimulation driver script *sim_test.py* is located in the
-folder **test**. It has equipped with a comprehensive set of CLI options. The "--help"
+The simulation driver script is located in the _simulator_ folder.
+```bash 
+./simulator/daq_simulator.py
+```
+
+It is equipped with a comprehensive set of CLI options. The "--help"
 option will output the available parameters.
 
 ### Time handling

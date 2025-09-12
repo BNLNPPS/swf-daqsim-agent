@@ -128,7 +128,7 @@ class DAQ:
         self.run_start  = ''            # the start time of the run, to be used in the metadata
         self.run_stop   = ''            # the stop time of the run, to be used in the metadata
 
-        self.read_schedule()
+        self.read_schedule()            # read the schedule from the YAML file
 
     # ---
     def read_schedule(self):
@@ -272,10 +272,14 @@ class DAQ:
         if self.verbose: print(f'''*** Starting the DAQ simulation run ***''')
 
         self.run_start_ts   = current_time()
-        self.run_id         = str(self.run_start_ts) # Could also generate a unique run ID based on the time - uuid.uuid1()
+        # FIXME - get the run ID from the run monitor
+        # For now, we just use the current timestamp as the run ID
+        # In the future, this should be replaced with a call to the run monitor service
+        # e.g. self.run_id = get_run_id_from_monitor()
+        self.run_id         = int(self.run_start_ts) # Could also generate a unique run ID based on the time - uuid.uuid1()
 
         if self.destination:
-            self.folder = f"{self.destination}/run_{self.run_id}"
+            self.folder = f"{self.destination}/run_{str(self.run_id)}"
             try:
                 os.makedirs(self.folder, exist_ok=True)
             except:

@@ -14,6 +14,7 @@ def func(to_print):
 parser = argparse.ArgumentParser()
 parser.add_argument("-v", "--verbose",  action='store_true',    help="Verbose mode")
 parser.add_argument("-e", "--envtest",  action='store_true',    help="Test the environment variables and exit", default=False)
+parser.add_argument("-M", "--monitor",  action='store_true',    help="Get run number from run monitor",         default=False)
 
 parser.add_argument("-S", "--send",     action='store_true',    help="Send messages to MQ",                     default=False)
 parser.add_argument("-R", "--receive",  action='store_true',    help="Receive messages from MQ",                default=False)
@@ -32,6 +33,7 @@ parser.add_argument("-H", "--high",     type=float,             help='The "high"
 args        = parser.parse_args()
 verbose     = args.verbose
 envtest     = args.envtest
+monitor     = args.monitor
 
 send        = args.send
 receive     = args.receive
@@ -39,6 +41,7 @@ receive     = args.receive
 if verbose:
     print(f'''*** Verbose mode is set to {verbose} ***''')
     print(f'''*** Send mode is set to {send}, receive more set to {receive} ***''')
+    print(f'''*** Monitor mode is set to {monitor} ***''')
 
 schedule    = args.schedule
 dest        = args.dest

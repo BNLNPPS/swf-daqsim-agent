@@ -2,10 +2,6 @@
 
 ---
 
-## Disclaimer
-
-The _comms_ part is currently work in progress, it's a stub not ready for real use.
-
 ## About
 * __Work Title__: _swf-daqsim-agent_
 * __Purpose__: To simulate the state machine of the ePIC DAQ, including its components interacting
@@ -22,8 +18,14 @@ of data distribution and processing.
 
 The working version of the file names is as follows:
 
-```
-swf.20250625.<integer>.<state>.<substate>.stf
+```bash
+# Integers in this notation are:
+# run date: YYYYMMDD
+# time to a second precision: hhmmss
+# microseconds for the same timestamp
+swf.<integer>.<integer>.<integer>.<state>.<substate>.stf
+# Example:
+swf.20250914.185727.197966.run.physics.stf
 ```
 
 Regarding the Python dependencies, they are captured in the _requirements_ file in this repository.
@@ -74,8 +76,8 @@ The Python package _stomp-py_ needs to be installed to support the current versi
 * MQ_CAFILE
 
 
-There are two types of messages: the run status messages (start/stop), and STF generation messages,
-notifying the system that a STF has been created.
+There are two types of messages: the run status messages (imminent/start/end),
+and STF generation messages, notifying the system that a STF has been created.
 
 ### Run Status Messages
 
@@ -87,8 +89,7 @@ a singleton.
 Examples:
 
 ```json
-{"msg_type": "start_run", "req_id": 1, "run_id": "20250718205015", "ts": "20250718205015"}
-{"msg_type": "stop_run",  "req_id": 1, "run_id": "20250718205015", "ts": "20250718205017"}
+{"msg_type": "start_run", "req_id": 1, "run_id": 20250914185722, "ts": "20250914185722"}
 ```
 
 The timestamp convention is **%Y%m%d%H%M%S**. This is different from the timestamp format
@@ -104,18 +105,7 @@ The format of the messages sent out to MQ by the simulator is illustrated in
 the following example:
 
 ```json
-{
-    "run_id":   "20250815161947",
-    "state":    "run",
-    "substate": "physics",
-    "filename": "swf.20250815.161953.306782.run.physics.stf",
-    "start":    "20250815161950088492",
-    "end":      "20250815161953306782",
-    "checksum": "ad:1563439560",
-    "size":     189,
-    "msg_type": "stf_gen",
-    "req_id": 1
-}
+{"run_id": 20250914185722, "state": "no_beam", "substate": "calib", "filename": "swf.20250914.185724.767135.no_beam.calib.stf", "start": "20250914185722420185", "end": "20250914185724767135", "checksum": "ad:3915264619", "size": 191, "msg_type": "stf_gen", "req_id": 1}
 ```
 
 The last two elements in this dictionary are added on top of the metadata generated

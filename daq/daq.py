@@ -135,6 +135,9 @@ class DAQ:
         self.run_stop   = ''            # the stop time of the run, to be used in the metadata
         self.test       = test          # test mode, if True get run number randomly, if False use API (not implemented yet)
 
+        self.agent_name = 'daq-simulator'
+        self.agent_type = 'daqsim'
+
         if not self.test:
             self.monitor_url    = os.getenv('SWF_MONITOR_URL', 'https://pandaserver02.sdcc.bnl.gov/swf-monitor')
             self.api_token      = os.getenv('SWF_API_TOKEN')
@@ -148,7 +151,8 @@ class DAQ:
 
             self.api_session.verify = False
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-        
+            # Send initial registration/heartbeat
+            self.send_heartbeat()        
         
         self.read_schedule()            # read the schedule from the YAML file
 
@@ -298,6 +302,45 @@ class DAQ:
         return next_run_number
     
     # ---
+    def send_heartbeat(self, status="OK"):
+        '''
+        Send a heartbeat message to the run monitor.
+        '''
+        
+        if self.test: return
+        
+        try:
+            payload = {
+                "instance_name":    self.agent_name,
+                "agent_type":       self.agent_type,
+                "status":           status,
+                "description":      f"DAQSIMULATOR agent {self.agent_name} is running",
+                "workflow_enabled": False  # Enable this agent for workflow tracking
+            }
+
+            print(f"[HEARTBEAT] Sending heartbeat for {self.agent_name} to {self.monitor_url}/api/systemagents/heartbeat/")
+            print(f"[HEARTBEAT] Payload: {payload}")
+            
+            url = f"{self.monitor_url}/api/systemagents/heartbeat/"
+            response = self.api_session.post(url, json=payload, timeout=10)
+            response.raise_for_status()
+            
+            print(f"[HEARTBEAT] SUCCESS: Status {response.status_code}")
+        except Exception as e:
+            print(f"Warning: failure sending heartbeat: {e}")
+            return
+        
+        data = response.json()
+        if 'status' in data and data['status'] == 'ok':
+            if self.verbose:
+                print(f"Heartbeat sent successfully for run {self.run_id}")
+        else:
+            print(f"Warning: unexpected response from heartbeat: {data}")
+            return
+    
+    
+    ############################ For completeness ##############################
+    # ---
     def __str__(self):
         return f'''DAQ Simulation: state={self.state}, substate={self.substate}, until={self.until}, clock={self.clock}, factor={self.factor}, low={self.low}, high={self.high}'''
 
@@ -356,6 +399,10 @@ class DAQ:
             self.sender.send(destination='epictopic', body=self.mq_start_run_message(), headers={'persistent': 'true'})
             if self.verbose: print(f'''*** Sent MQ message for start of run {str(self.run_id)} ***''')
     
+        if not self.test:
+            # Send heartbeat
+            self.send_heartbeat()
+    
     def end_run(self):
         '''
         End the simulation run, clean up resources and print the summary.
@@ -369,7 +416,9 @@ class DAQ:
             print(f'''*** Ending the DAQ simulation run ***''')
             print(f'''*** Total number of STFs generated: {self.Nstf} ***''')
   
-    
+        if not self.test:
+            # Send heartbeat
+            self.send_heartbeat()
     
     def run(self):
         self.start_run()  # Initialize the simulation environment and processes

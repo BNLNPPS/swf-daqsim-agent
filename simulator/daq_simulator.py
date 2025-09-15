@@ -13,6 +13,7 @@ def func(to_print):
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-v", "--verbose",  action='store_true',    help="Verbose mode")
+parser.add_argument("-t", "--tst",      action='store_true',    help="Test mode")
 parser.add_argument("-e", "--envtest",  action='store_true',    help="Test the environment variables and exit", default=False)
 parser.add_argument("-M", "--monitor",  action='store_true',    help="Get run number from run monitor",         default=False)
 
@@ -32,6 +33,7 @@ parser.add_argument("-H", "--high",     type=float,             help='The "high"
 
 args        = parser.parse_args()
 verbose     = args.verbose
+tst         = args.tst
 envtest     = args.envtest
 monitor     = args.monitor
 
@@ -40,6 +42,7 @@ receive     = args.receive
 
 if verbose:
     print(f'''*** Verbose mode is set to {verbose} ***''')
+    print(f'''*** Test mode is set to {tst} ***''')
     print(f'''*** Send mode is set to {send}, receive more set to {receive} ***''')
     print(f'''*** Monitor mode is set to {monitor} ***''')
 
@@ -160,10 +163,10 @@ daq = DAQ(schedule_f    = schedule,
           factor        = factor,
           low           = low,
           high          = high,
-          verbose       = verbose,
           sender        = sndr,
-          receiver      = rcvr
-          )
+          receiver      = rcvr,
+          verbose       = verbose,
+          test          = tst)
 
 daq.run()
 

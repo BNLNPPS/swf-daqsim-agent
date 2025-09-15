@@ -1,6 +1,7 @@
 # foundation packages
 import numpy as np
 import simpy, yaml, random, json, bisect, zlib, os
+import random
 import datetime
 from   datetime import datetime as dt
 
@@ -69,7 +70,7 @@ def current_time():
 
 
 ###################################################################################
-class Monitor():
+class Monitor(): # possibly to be implemented later
     ''' The Monitor class is used to record the time series of the parameters of choice,
         as the simulation is progressing through time steps.
         NB. Work in progress, to be implemented yet.
@@ -100,9 +101,10 @@ class DAQ:
                  factor=1.0,
                  low=1.0,
                  high=2.0,
-                 verbose=False,
                  sender=None,
-                 receiver=None):
+                 receiver=None,
+                 verbose=False,
+                 test=False):
         
         self.state      = None          # current state of the DAQ, undergoes changes in time
         self.substate   = None          # current substate of the DAQ, undergoes changes in time
@@ -273,10 +275,13 @@ class DAQ:
 
         self.run_start_ts   = current_time()
         # FIXME - get the run ID from the run monitor
-        # For now, we just use the current timestamp as the run ID
-        # In the future, this should be replaced with a call to the run monitor service
+        #
+        # In future, this should be replaced with a call to the run monitor service
         # e.g. self.run_id = get_run_id_from_monitor()
-        self.run_id         = int(self.run_start_ts) # Could also generate a unique run ID based on the time - uuid.uuid1()
+        
+        self.run_id = random.randint(1, 1000)
+        
+        # self.run_id         = int(self.run_start_ts) # Could also generate a unique run ID based on the time - uuid.uuid1()
 
         if self.destination:
             self.folder = f"{self.destination}/run_{str(self.run_id)}"

@@ -1,0 +1,9 @@
+# Strictly for basic testing purposes only - short run. Not for any realistoc  use
+
+- state:    no_beam
+  substate: calib
+  span:     0,0,0,0,10
+
+- state:    beam
+  substate: not_ready
+  span:     0,0,0,0,10

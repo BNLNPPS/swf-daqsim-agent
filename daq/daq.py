@@ -1,7 +1,6 @@
 # foundation packages
 import numpy as np
-import simpy, yaml, random, json, bisect, zlib, os
-import random
+import simpy, yaml, random, json, bisect, zlib, os, requests, random
 import datetime
 from   datetime import datetime as dt
 
@@ -129,7 +128,12 @@ class DAQ:
         self.run_start_ts = None        # the start time of the run, as a timestamp
         self.run_start  = ''            # the start time of the run, to be used in the metadata
         self.run_stop   = ''            # the stop time of the run, to be used in the metadata
+        self.test       = test          # test mode, if True get run number randomly, if False use API (not implemented yet)
 
+        self.monitor_url = os.getenv('SWF_MONITOR_URL', 'https://pandaserver02.sdcc.bnl.gov/swf-monitor')
+        if self.verbose: print(f'''*** The SWF_MONITOR_URL is set to {self.monitor_url} ***''')
+
+        self.api_session = requests.Session()
         self.read_schedule()            # read the schedule from the YAML file
 
     # ---
@@ -253,6 +257,23 @@ class DAQ:
         return json.dumps(md)
 
     # ---
+    def get_next_run_number(self):
+        '''
+        Get the next run number from the run monitor.
+        This is a placeholder for now, to be implemented later.
+        '''
+        get_next_run_number = None
+        
+        if self.test:
+            return random.randint(1, 1000)
+        else:
+            print('*** API mode is not implemented yet, exiting... ***')
+            exit(-1)
+
+    
+    
+    
+    # ---
     def __str__(self):
         return f'''DAQ Simulation: state={self.state}, substate={self.substate}, until={self.until}, clock={self.clock}, factor={self.factor}, low={self.low}, high={self.high}'''
 
@@ -279,7 +300,7 @@ class DAQ:
         # In future, this should be replaced with a call to the run monitor service
         # e.g. self.run_id = get_run_id_from_monitor()
         
-        self.run_id = random.randint(1, 1000)
+        self.run_id = self.get_next_run_number()
         
         # self.run_id         = int(self.run_start_ts) # Could also generate a unique run ID based on the time - uuid.uuid1()
 

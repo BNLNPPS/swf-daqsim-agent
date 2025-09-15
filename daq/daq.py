@@ -1,6 +1,11 @@
-# foundation packages
+#
+# daq/daq.py
+# This is the DAQ simulator. It includes the main DAQ class, which simulates the data acquisition process. 
+# There are a number of utility functions as well.
+#
+
 import numpy as np
-import simpy, yaml, random, json, bisect, zlib, os, requests, random
+import simpy, yaml, random, json, bisect, zlib, os, requests, random, urllib3
 import datetime
 from   datetime import datetime as dt
 
@@ -130,10 +135,21 @@ class DAQ:
         self.run_stop   = ''            # the stop time of the run, to be used in the metadata
         self.test       = test          # test mode, if True get run number randomly, if False use API (not implemented yet)
 
-        self.monitor_url = os.getenv('SWF_MONITOR_URL', 'https://pandaserver02.sdcc.bnl.gov/swf-monitor')
-        if self.verbose: print(f'''*** The SWF_MONITOR_URL is set to {self.monitor_url} ***''')
+        if not self.test:
+            self.monitor_url    = os.getenv('SWF_MONITOR_URL', 'https://pandaserver02.sdcc.bnl.gov/swf-monitor')
+            self.api_token      = os.getenv('SWF_API_TOKEN')
+            if self.verbose:
+                print(f'''*** The SWF_MONITOR_URL is set to {self.monitor_url} ***''')
+                print(f'''*** The access token is set to {self.api_token} ***''')
+            self.api_session = requests.Session()
+            
+            if self.api_token:
+                self.api_session.headers.update({'Authorization': f'Token {self.api_token}'})
 
-        self.api_session = requests.Session()
+            self.api_session.verify = False
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        
+        
         self.read_schedule()            # read the schedule from the YAML file
 
     # ---
@@ -262,16 +278,24 @@ class DAQ:
         Get the next run number from the run monitor.
         This is a placeholder for now, to be implemented later.
         '''
-        get_next_run_number = None
+        next_run_number = None
         
         if self.test:
-            return random.randint(1, 1000)
+            next_run_number = random.randint(1, 1000)
         else:
-            print('*** API mode is not implemented yet, exiting... ***')
-            exit(-1)
+            try:
+                url = f"{self.monitor_url}/api/state/next-run-number/"
+                response = self.api_session.post(url, timeout=10)
+                response.raise_for_status()
+            except Exception as e:                
+                raise RuntimeError(f"Critical failure getting run number: {e}") from e
+            data = response.json()
+            if 'run_number' in data:
+                next_run_number = data['run_number']
+            else:
+                raise RuntimeError(f"Critical failure getting run number, no run_number in response: {data}")
 
-    
-    
+        return next_run_number
     
     # ---
     def __str__(self):

@@ -133,6 +133,7 @@ class DAQ:
         self.env        = None          # the SimPy environment, to be created later
         self.run_id     = ''            # to be filled later, the run name/number etc
         self.dataset    = ''            # to be filled later, based on the run number
+        self.filename   = ''            # the current STF filename, to be generated later
         self.run_start_ts = None        # the start time of the run, as a timestamp
         self.run_start  = ''            # the start time of the run, to be used in the metadata
         self.run_stop   = ''            # the stop time of the run, to be used in the metadata
@@ -203,12 +204,24 @@ class DAQ:
         return f"{self.env.now:.1f}s"
 
     # ---
-    def metadata(self, filename, start, end):
+    # Keep for reference - we now moved to a different filename template, as seen below
+    # The filename template: swf.20250625.<integer>.<state>.<substateate>.stf
+    # filename = f'''swf.{formatted_date}.{formatted_time}.{formatted_us}.{self.state}.{self.substate}.stf'''
+
+    def define_filename(self):
+        self.filename = f'''swf.{self.run_id:06d}.{self.Nstf:06d}.stf'''
+
+    # ---
+    # Keep for reference f'run_{str(self.run_id)}_swf' -- old version
+    def define_dataset(self):
+        self.dataset = f'''swf.{self.run_id:06d}.run'''  # Dataset name based on the run number
+    # ---
+    def metadata(self, start, end):
         md ={
                 'run_id':       self.run_id,
                 'state':        self.state,
                 'substate':     self.substate,
-                'filename':     filename,
+                'filename':     self.filename,
                 'start':        start.strftime(timeformat),
                 'end':          end.strftime(timeformat)
             }
@@ -368,6 +381,9 @@ class DAQ:
         Start the simulation run, create the SimPy environment and register the processes.
         This method is called to initialize the simulation environment and start the processes.
 
+        The "run imminent" message is sent here, before the actual start of the run.
+        The "start run" message is sent after that.
+
         NB. Folder for the run is created here, if destination is specified.
         NB. Dataset name is generated here, based on the run number.
         '''
@@ -380,12 +396,10 @@ class DAQ:
         # e.g. self.run_id = get_run_id_from_monitor()
         
         self.run_id = self.get_next_run_number()
+        self.define_dataset() # define the dataset name ('dataset' attribute) based on the run number
         
-        self.dataset = f'run_{str(self.run_id)}_swf'  # Dataset name based on the run number
-        
-        if self.destination:
+        if self.destination: # Create the folder for the run, if it does not exist
             self.folder = f"{self.destination}/{self.dataset}"
-            # Create the folder for the run, if it does not exist
             try:
                 os.makedirs(self.folder, exist_ok=True)
             except:
@@ -488,6 +502,8 @@ class DAQ:
         size  = 0
 
         while True:
+            self.define_filename() # define the filename for the current STF
+
             build_start = dt.now() # .strftime("%Y%m%d%H%M%S")
             stf_arrival = random.uniform(self.low, self.high)   # Time for next STF (random interval between the low/high limits)
             interval    = datetime.timedelta(seconds=stf_arrival)
@@ -497,13 +513,7 @@ class DAQ:
             formatted_time = build_end.strftime("%H%M%S")
             formatted_us   = build_end.strftime("%f")
 
-            # The filename template: swf.20250625.<integer>.<state>.<substateate>.stf
-            filename = f'''swf.{formatted_date}.{formatted_time}.{formatted_us}.{self.state}.{self.substate}.stf'''
-
-            md = self.metadata(filename, build_start, build_end)
-            
-            # For debugging purposes, print the components of the generated metadata
-            #       print(build_start, build_end, filename)
+            md = self.metadata(build_start, build_end)
 
             # This is provisionl until we have a real STF file to write
             # For now, we just create a JSON message with the metadata
@@ -511,7 +521,7 @@ class DAQ:
             data = json.dumps(md)
             
             if self.destination:
-                dfilename = f"{self.folder}/{filename}"
+                dfilename = f"{self.folder}/{self.filename}"
                 # Here we would write the STF to the file, and send a notification to a message queue
                 with open(dfilename, 'w') as f:
                     f.write(data)

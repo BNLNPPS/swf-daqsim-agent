@@ -3,6 +3,8 @@
 # This is the DAQ simulator. It includes the main DAQ class, which simulates the data acquisition process. 
 # There are a number of utility functions as well.
 #
+# MQ mewssages are templated, and then updated with the checksum and size of the generated STF file.
+
 
 import numpy as np
 import simpy, yaml, random, json, bisect, zlib, os, requests, random, urllib3
@@ -130,6 +132,7 @@ class DAQ:
         self.receiver   = receiver      # the MQ receiver, if any
         self.env        = None          # the SimPy environment, to be created later
         self.run_id     = ''            # to be filled later, the run name/number etc
+        self.dataset    = ''            # to be filled later, based on the run number
         self.run_start_ts = None        # the start time of the run, as a timestamp
         self.run_start  = ''            # the start time of the run, to be used in the metadata
         self.run_stop   = ''            # the stop time of the run, to be used in the metadata
@@ -225,6 +228,7 @@ class DAQ:
         msg['req_id']       = 1
         msg['run_id']       = self.run_id
         msg['timestamp']    = self.run_start_ts
+        msg['dataset']      = self.dataset
 
         msg['run_conditions'] = {
                 "beam_energy": "5 GeV",
@@ -284,6 +288,11 @@ class DAQ:
         '''
         next_run_number = None
         
+        #
+        # We ask the monitor to provide the next run number, or if needed generate a random one for testing.
+        # In the past, we used self.run_start_ts but the size of the integer quickly becomes a problem
+        # Could also use uuid.uuid1(), but for now this is not optimal.
+        #
         if self.test:
             next_run_number = random.randint(1, 1000)
         else:
@@ -358,6 +367,9 @@ class DAQ:
         '''
         Start the simulation run, create the SimPy environment and register the processes.
         This method is called to initialize the simulation environment and start the processes.
+
+        NB. Folder for the run is created here, if destination is specified.
+        NB. Dataset name is generated here, based on the run number.
         '''
         if self.verbose: print(f'''*** Starting the DAQ simulation run ***''')
 
@@ -369,10 +381,11 @@ class DAQ:
         
         self.run_id = self.get_next_run_number()
         
-        # self.run_id         = int(self.run_start_ts) # Could also generate a unique run ID based on the time - uuid.uuid1()
-
+        self.dataset = f'run_{str(self.run_id)}_swf'  # Dataset name based on the run number
+        
         if self.destination:
-            self.folder = f"{self.destination}/run_{str(self.run_id)}"
+            self.folder = f"{self.destination}/{self.dataset}"
+            # Create the folder for the run, if it does not exist
             try:
                 os.makedirs(self.folder, exist_ok=True)
             except:
@@ -508,8 +521,8 @@ class DAQ:
                 if self.verbose: print(f'''*** Wrote STF to file {dfilename}, Adler-32 checksum: {adler}, size: {size} ***''')
 
             # Augment the metadata with the checksum and size, to be sent to MQ
-            md['checksum'] = f'''ad:{str(adler)}'''  # Adler-32 checksum
-            md['size']    = size
+            md['checksum']  = f'''ad:{str(adler)}'''  # Adler-32 checksum
+            md['size']      = size
         
             if self.sender:
                 self.sender.send(destination='epictopic', body=self.mq_stf_message(md), headers={'persistent': 'true'})

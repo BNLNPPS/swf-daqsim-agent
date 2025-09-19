@@ -207,15 +207,17 @@ class DAQ:
     # Keep for reference - we now moved to a different filename template, as seen below
     # The filename template: swf.20250625.<integer>.<state>.<substateate>.stf
     # filename = f'''swf.{formatted_date}.{formatted_time}.{formatted_us}.{self.state}.{self.substate}.stf'''
+    # Keep for reference, dataset --- f'run_{str(self.run_id)}_swf' -- old version
 
+    # ---
     def define_filename(self):
         self.filename = f'''swf.{self.run_id:06d}.{self.Nstf:06d}.stf'''
 
     # ---
-    # Keep for reference f'run_{str(self.run_id)}_swf' -- old version
     def define_dataset(self):
         self.dataset = f'''swf.{self.run_id:06d}.run'''  # Dataset name based on the run number
     # ---
+    
     def metadata(self, start, end):
         md ={
                 'run_id':       self.run_id,
@@ -509,10 +511,6 @@ class DAQ:
             interval    = datetime.timedelta(seconds=stf_arrival)
             build_end   = build_start+interval
 
-            formatted_date = build_end.strftime("%Y%m%d")             # ("%Y-%m-%d %H:%M:%S")
-            formatted_time = build_end.strftime("%H%M%S")
-            formatted_us   = build_end.strftime("%f")
-
             md = self.metadata(build_start, build_end)
 
             # This is provisionl until we have a real STF file to write
@@ -531,12 +529,15 @@ class DAQ:
                 if self.verbose: print(f'''*** Wrote STF to file {dfilename}, Adler-32 checksum: {adler}, size: {size} ***''')
 
             # Augment the metadata with the checksum and size, to be sent to MQ
+            # The reason we are doing it here is that we need to have the file written
+            # before we can calculate the checksum and size
+            
             md['checksum']  = f'''ad:{str(adler)}'''  # Adler-32 checksum
             md['size']      = size
         
             if self.sender:
                 self.sender.send(destination='epictopic', body=self.mq_stf_message(md), headers={'persistent': 'true'})
-                if self.verbose: print(f'''*** Sent MQ message for STF {filename} ***''')
+                if self.verbose: print(f'''*** Sent MQ message for STF {self.filename} ***''')
 
             self.Nstf+=1
             yield self.env.timeout(stf_arrival)
@@ -545,39 +546,17 @@ class DAQ:
 
 ##################################################################################
 # --- ATTIC ---
-# import datetime
-# from   datetime import datetime
-# d8P7%d5S
-
-# We'll use datetime to handle the time axis
-# from datetime import datetime
-# dt = datetime.strptime("2023-12-25 14:30:00", "%Y-%m-%d %H:%M:%S")
-
-###########
-# dt_fmt = '%Y-%m-%d %H:%M:%S'
-        # points = list(self.schedule.keys())
-        # if self.verbose: print(f'''The schedule read from file {self.schedule_f} contains {len(points)} points''')
-
-        # for point in points:
-        #     self.schedule[point]['ts'] = int(datetime.strptime(self.schedule[point]['start'], dt_fmt).timestamp())
-
-        # first   = self.schedule[points[0]]
-        # last    = self.schedule[points[-1]]
-
-        # self.initial_time   = int(datetime.strptime(first['start'], dt_fmt).timestamp())
-        # self.until          = int(datetime.strptime(last['start'],  dt_fmt).timestamp())
-
+# Some code snippets kept here for reference, to be possibly used later
 # SimPy:
 # self.env.process(self.run()) # Set the callback to this class, for simpy        self.env.run(until=self.until)
 
 # ts_now = datetime.datetime.now().timestamp()
-# if self.verbose : print(f'''*** Initializing at {ts_now} ***''')
-
-# Timestamp, if needed
-# print(smltr.schedule)
-# print(smltr.until)
 # dt = datetime.now()
 # seconds_since_epoch = dt.timestamp()
 # print(int(seconds_since_epoch))
 
 # self.sender.send(destination='epictopic', body=json.dumps(md), headers={'persistent': 'true'})
+
+# formatted_date = build_end.strftime("%Y%m%d")             # ("%Y-%m-%d %H:%M:%S")
+# formatted_time = build_end.strftime("%H%M%S")
+# formatted_us   = build_end.strftime("%f")

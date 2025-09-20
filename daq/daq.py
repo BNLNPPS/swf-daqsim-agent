@@ -1,9 +1,10 @@
 #
 # daq/daq.py
+#
 # This is the DAQ simulator. It includes the main DAQ class, which simulates the data acquisition process. 
 # There are a number of utility functions as well.
 #
-# MQ mewssages are templated, and then updated with the checksum and size of the generated STF file.
+# STF MQ mewssages are stubbed out, and then updated with the checksum and size of the generated STF file.
 
 
 import numpy as np
@@ -11,7 +12,7 @@ import simpy, yaml, random, json, bisect, zlib, os, requests, random, urllib3
 import datetime
 from   datetime import datetime as dt
 
-
+from api_utils import get_next_run_number  # to get the next run number from the run monitor (common)
 # ---
 timeformat = "%Y%m%d%H%M%S%f"  # Format for the STF start and end times in metadata
 
@@ -296,7 +297,7 @@ class DAQ:
         return json.dumps(md)
 
     # ---
-    def get_next_run_number(self):
+    def get_run_number(self):
         '''
         Get the next run number from the run monitor.
         This is a placeholder for now, to be implemented later.
@@ -392,12 +393,8 @@ class DAQ:
         if self.verbose: print(f'''*** Starting the DAQ simulation run ***''')
 
         self.run_start_ts   = current_time()
-        # FIXME - get the run ID from the run monitor
-        #
-        # In future, this should be replaced with a call to the run monitor service
-        # e.g. self.run_id = get_run_id_from_monitor()
         
-        self.run_id = self.get_next_run_number()
+        self.run_id = self.get_run_number()
         self.define_dataset() # define the dataset name ('dataset' attribute) based on the run number
         
         if self.destination: # Create the folder for the run, if it does not exist

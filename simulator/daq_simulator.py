@@ -1,18 +1,56 @@
 #! /usr/bin/env python
-
 #############################################
-
 import os, argparse, datetime, sys
 from   sys import exit
 
 from set_environment import setenv # This will setup the Python environment
 
+# Helper functions
 # ---
-
 def func(to_print):
-    print(to_print) # a simple function to process received messages
+    print(to_print) # for MQ: a simple function to process received messages
+
+# ---
+def get_sender_and_receiver(verbose, func): # if needed, setup the sender and receiver
+    sndr = None
+    rcvr = None
+
+    try:
+        from mq_comms import Sender
+        if verbose: print(f'''*** Successfuly imported the Sender from mq_comms ***''')
+    except:
+        print('*** Failed to import the Sender from mq_comms, exiting...***')
+        exit(-1)
+
+    try:
+        sndr = Sender(verbose=verbose)
+        if verbose: print(f'''*** Successfully instantiated the Sender ***''')
+        sndr.connect()
+        if verbose: print(f'''*** Successfully connected the Sender to MQ ***''')
+    except:
+        print('*** Failed to instantiate the Sender, exiting...***')
+        exit(-1)
 
 
+    try:
+        from mq_comms import Receiver
+        if verbose: print(f'''*** Successfully imported the Receiver from comms ***''')
+    except:
+        print('*** Failed to import the Receiver from comms, exiting...***')
+        exit(-1)
+    
+    try:
+        rcvr = Receiver(verbose=verbose, processor=func) # a function to process received messages
+        rcvr.connect()
+        if verbose: print(f'''*** Successfully instantiated and connected the Receiver, will receive messages from MQ ***''')
+    except:
+        print('*** Failed to instantiate the Receiver, exiting...***')
+        exit(-1)
+
+    return sndr, rcvr
+
+
+###################### Main code
 parser = argparse.ArgumentParser()
 parser.add_argument("-v", "--verbose",  action='store_true',    help="Verbose mode")
 parser.add_argument("-t", "--tst",      action='store_true',    help="Test mode")
@@ -42,11 +80,7 @@ monitor     = args.monitor
 send        = args.send
 receive     = args.receive
 
-if verbose:
-    print(f'''*** Verbose mode is set to {verbose} ***''')
-    print(f'''*** Test mode is set to {tst} ***''')
-    print(f'''*** Send mode is set to {send}, receive more set to {receive} ***''')
-    print(f'''*** Monitor mode is set to {monitor} ***''')
+if verbose: print(f'''*** Verbose: {verbose}, Test: {tst}, Send: {send}, Monitor: {monitor} ***''')
 
 schedule    = args.schedule
 dest        = args.dest
@@ -90,42 +124,7 @@ if envtest:
     print('*** Main environment variables have been tested, exiting... ***')
     exit(0) 
 
-sndr = None
-rcvr = None
-
-if send:
-    try:
-        from mq_comms import Sender
-        if verbose: print(f'''*** Successfuly imported the Sender from mq_comms ***''')
-    except:
-        print('*** Failed to import the Sender from mq_comms, exiting...***')
-        exit(-1)
-
-    try:
-        sndr = Sender(verbose=verbose)
-        if verbose: print(f'''*** Successfully instantiated the Sender ***''')
-        sndr.connect()
-        if verbose: print(f'''*** Successfully connected the Sender to MQ ***''')
-    except:
-        print('*** Failed to instantiate the Sender, exiting...***')
-        exit(-1)
-
-
-if receive:
-    try:
-        from mq_comms import Receiver
-        if verbose: print(f'''*** Successfully imported the Receiver from comms ***''')
-    except:
-        print('*** Failed to import the Receiver from comms, exiting...***')
-        exit(-1)
-    
-    try:
-        rcvr = Receiver(verbose=verbose, processor=func) # a function to process received messages
-        rcvr.connect()
-        if verbose: print(f'''*** Successfully instantiated and connected the Receiver, will receive messages from MQ ***''')
-    except:
-        print('*** Failed to instantiate the Receiver, exiting...***')
-        exit(-1)
+sndr, rcvr = get_sender_and_receiver(verbose, func) if (send or receive) else (None, None)
 
 # ---
 daq = DAQ(schedule_f    = schedule,

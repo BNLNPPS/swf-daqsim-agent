@@ -12,7 +12,6 @@ def setenv(verbose) -> None:
         src_path = SWF_COMMON_LIB_PATH + '/src/swf_common_lib'
         if src_path not in sys.path:
             sys.path.append(src_path)
-            if verbose: print(f'''*** Added {src_path} to sys.path ***''')
         else:
             if verbose: print(f'''*** {src_path} is already in sys.path ***''')
     except:

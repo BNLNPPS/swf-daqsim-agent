@@ -1,3 +1,5 @@
+# Deprecated - moved back to the main.
+
 import os, sys
 def setenv(verbose) -> None:
     print('*** Setting up environment variables for the DAQ simulator... ***')
@@ -17,12 +19,6 @@ def setenv(verbose) -> None:
     except:
         if verbose: print('*** The variable SWF_COMMON_LIB_PATH is undefined, will rely on PYTHONPATH ***')
 
-    try:
-        MQ_COMMS_PATH = os.environ['MQ_COMMS_PATH']
-        if verbose: print(f'''*** The MQ_COMMS_PATH is defined in the environment: {MQ_COMMS_PATH}, will be added to sys.path ***''')
-        if MQ_COMMS_PATH not in sys.path: sys.path.append(MQ_COMMS_PATH)
-    except:
-        if verbose: print('*** The variable MQ_COMMS_PATH is undefined, will rely on PYTHONPATH ***')
 
     try:
         DAQSIM_PATH=os.environ['DAQSIM_PATH']
@@ -37,3 +33,11 @@ def setenv(verbose) -> None:
     if verbose: print('*** Environment variables for the DAQ simulator are set up. ***')
     return None
 
+
+# ATTIC
+    # try:
+    #     MQ_COMMS_PATH = os.environ['MQ_COMMS_PATH']
+    #     if verbose: print(f'''*** The MQ_COMMS_PATH is defined in the environment: {MQ_COMMS_PATH}, will be added to sys.path ***''')
+    #     if MQ_COMMS_PATH not in sys.path: sys.path.append(MQ_COMMS_PATH)
+    # except:
+    #     if verbose: print('*** The variable MQ_COMMS_PATH is undefined, will rely on PYTHONPATH ***')

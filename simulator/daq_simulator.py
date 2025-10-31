@@ -2,53 +2,7 @@
 #############################################
 import os, argparse, datetime, sys
 from   sys import exit
-
-from set_environment import setenv # This will setup the Python environment
-
-# Helper functions
-# ---
-def func(to_print):
-    print(to_print) # for MQ: a simple function to process received messages
-
-# ---
-def get_sender_and_receiver(verbose, func): # if needed, setup the sender and receiver
-    sndr = None
-    rcvr = None
-
-    try:
-        from mq_comms import Sender
-        if verbose: print(f'''*** Successfuly imported the Sender from mq_comms ***''')
-    except:
-        print('*** Failed to import the Sender from mq_comms, exiting...***')
-        exit(-1)
-
-    try:
-        sndr = Sender(verbose=verbose)
-        if verbose: print(f'''*** Successfully instantiated the Sender ***''')
-        sndr.connect()
-        if verbose: print(f'''*** Successfully connected the Sender to MQ ***''')
-    except:
-        print('*** Failed to instantiate the Sender, exiting...***')
-        exit(-1)
-
-
-    try:
-        from mq_comms import Receiver
-        if verbose: print(f'''*** Successfully imported the Receiver from comms ***''')
-    except:
-        print('*** Failed to import the Receiver from comms, exiting...***')
-        exit(-1)
-    
-    try:
-        rcvr = Receiver(verbose=verbose, processor=func) # a function to process received messages
-        rcvr.connect()
-        if verbose: print(f'''*** Successfully instantiated and connected the Receiver, will receive messages from MQ ***''')
-    except:
-        print('*** Failed to instantiate the Receiver, exiting...***')
-        exit(-1)
-
-    return sndr, rcvr
-
+from   pathlib import Path
 
 ###################### Main code
 parser = argparse.ArgumentParser()
@@ -96,8 +50,7 @@ high        = args.high
 
 if verbose: print('*** Setting up environment variables for the DAQ simulator... ***')
 SWF_COMMON_LIB_PATH = ''
-MQ_COMMS_PATH       = ''
-DAQSIM_PATH         = ''
+# DAQSIM_PATH         = ''
 
 try:
     SWF_COMMON_LIB_PATH = os.environ['SWF_COMMON_LIB_PATH']
@@ -112,14 +65,28 @@ except:
     if verbose: print('*** The variable SWF_COMMON_LIB_PATH is undefined, will rely on PYTHONPATH ***')
 
 
-try:
-    DAQSIM_PATH=os.environ['DAQSIM_PATH']
-    if verbose: print(f'''*** The DAQSIM_PATH is defined in the environment: {DAQSIM_PATH}, will be added to sys.path ***''')
-    sys.path.append(DAQSIM_PATH)
-except:
-    if verbose: print('*** The variable DAQSIM_PATH is undefined, will rely on PYTHONPATH and ../ ***')
-    DAQSIM_PATH = '../'  # Add parent to path, to enable running locally (also for data)
-    sys.path.append(DAQSIM_PATH)
+
+# Get the absolute path of the current file
+current_path = Path(__file__).resolve()
+
+# Get the directory above one containing the current file
+top_directory = current_path.parent.parent
+print(f"Top directory: {top_directory}")
+
+if top_directory not in sys.path:
+    sys.path.append(str(top_directory))
+    if verbose: print(f'''*** Added {top_directory} to sys.path ***''')
+else:
+    if verbose: print(f'''*** {top_directory} is already in sys.path ***''')
+
+# try:
+#     DAQSIM_PATH=os.environ['DAQSIM_PATH']
+#     if verbose: print(f'''*** The DAQSIM_PATH is defined in the environment: {DAQSIM_PATH}, will be added to sys.path ***''')
+#     sys.path.append(DAQSIM_PATH)
+# except:
+#     if verbose: print('*** The variable DAQSIM_PATH is undefined, will rely on PYTHONPATH and ../ ***')
+#     DAQSIM_PATH = '../'  # Add parent to path, to enable running locally (also for data)
+#     sys.path.append(DAQSIM_PATH)
         
         
 if verbose: print('*** Environment variables for the DAQ simulator are set up. ***')
@@ -154,8 +121,6 @@ if envtest:
     print('*** Main environment variables have been tested, exiting... ***')
     exit(0) 
 
-sndr, rcvr = get_sender_and_receiver(verbose, func) if (send or receive) else (None, None)
-
 # ---
 daq = DAQ(schedule_f    = schedule,
           destination   = dest,
@@ -164,25 +129,57 @@ daq = DAQ(schedule_f    = schedule,
           factor        = factor,
           low           = low,
           high          = high,
-          sender        = sndr,
-          receiver      = rcvr,
           verbose       = verbose,
           test          = tst)
 
 daq.run()
 
-print('---')
 if verbose:
     print(f'''*** Completed at {daq.get_simpy_time()}. Number of STFs generated: {daq.Nstf} ***''')
-    print(f'''*** Disconnecting MQ communications ***''')
-
-if send:
-    if sndr:
-        sndr.disconnect()
-if receive:
-    if rcvr:
-        rcvr.disconnect()
-
-print('---')
 
 
+# from set_environment import setenv # This will setup the Python environment
+
+# # Helper functions
+# # ---
+# def func(to_print):
+#     print(to_print) # for MQ: a simple function to process received messages
+
+# # ---
+# def get_sender_and_receiver(verbose, func): # if needed, setup the sender and receiver
+#     sndr = None
+#     rcvr = None
+
+#     try:
+#         from mq_comms import Sender
+#         if verbose: print(f'''*** Successfuly imported the Sender from mq_comms ***''')
+#     except:
+#         print('*** Failed to import the Sender from mq_comms, exiting...***')
+#         exit(-1)
+
+#     try:
+#         sndr = Sender(verbose=verbose)
+#         if verbose: print(f'''*** Successfully instantiated the Sender ***''')
+#         sndr.connect()
+#         if verbose: print(f'''*** Successfully connected the Sender to MQ ***''')
+#     except:
+#         print('*** Failed to instantiate the Sender, exiting...***')
+#         exit(-1)
+
+
+#     try:
+#         from mq_comms import Receiver
+#         if verbose: print(f'''*** Successfully imported the Receiver from comms ***''')
+#     except:
+#         print('*** Failed to import the Receiver from comms, exiting...***')
+#         exit(-1)
+    
+#     try:
+#         rcvr = Receiver(verbose=verbose, processor=func) # a function to process received messages
+#         rcvr.connect()
+#         if verbose: print(f'''*** Successfully instantiated and connected the Receiver, will receive messages from MQ ***''')
+#     except:
+#         print('*** Failed to instantiate the Receiver, exiting...***')
+#         exit(-1)
+
+#     return sndr, rcvr

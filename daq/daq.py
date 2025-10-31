@@ -12,57 +12,58 @@ import simpy, yaml, random, json, bisect, zlib, os, requests, random, urllib3
 import datetime
 from   datetime import datetime as dt
 
+from rucio_comms.utils import calculate_adler32_from_file, get_file_size
 from api_utils import get_next_run_number, get_next_agent_id  # to get the next run number from the run monitor (common)
 # ---
 timeformat = "%Y%m%d%H%M%S%f"  # Format for the STF start and end times in metadata
 
 # ---
-def calculate_adler32_from_file(file_path, chunk_size=4096):
-    """
-    Calculates the Adler-32 checksum of a file.
+# def calculate_adler32_from_file(file_path, chunk_size=4096):
+    # """
+    # Calculates the Adler-32 checksum of a file.
 
-    Args:
-        filepath (str): The path to the file.
-        chunk_size (int): The size of chunks to read from the file.
+    # Args:
+    #     filepath (str): The path to the file.
+    #     chunk_size (int): The size of chunks to read from the file.
 
-    Returns:
-        int: The Adler-32 checksum of the file.
-    """
-    adler32_checksum = 1  # Initial Adler-32 value
+    # Returns:
+    #     int: The Adler-32 checksum of the file.
+    # """
+    # adler32_checksum = 1  # Initial Adler-32 value
 
-    try:
-        with open(file_path, 'rb') as f:
-            while True:
-                chunk = f.read(chunk_size)
-                if not chunk:
-                    break
-                adler32_checksum = zlib.adler32(chunk, adler32_checksum)
-        return adler32_checksum & 0xffffffff  # Ensure 32-bit unsigned result
-    except:
-        print(f"Problem with file {file_path}")
-        exit(-2)
+    # try:
+    #     with open(file_path, 'rb') as f:
+    #         while True:
+    #             chunk = f.read(chunk_size)
+    #             if not chunk:
+    #                 break
+    #             adler32_checksum = zlib.adler32(chunk, adler32_checksum)
+    #     return adler32_checksum & 0xffffffff  # Ensure 32-bit unsigned result
+    # except:
+    #     print(f"Problem with file {file_path}")
+    #     exit(-2)
 
 
 # ---
-def get_file_size(file_path):
-    """
-    Returns the size of the file at the given path in bytes.
+# def get_file_size(file_path):
+#     """
+#     Returns the size of the file at the given path in bytes.
     
-    Args:
-        file_path (str): The path to the file.
+#     Args:
+#         file_path (str): The path to the file.
     
-    Returns:
-        int: The size of the file in bytes, or None if the file does not exist.
-    """
+#     Returns:
+#         int: The size of the file in bytes, or None if the file does not exist.
+#     """
 
-    file_size_bytes = 0
-    try:
-        file_size_bytes = os.path.getsize(file_path)
-    except:
-        print(f"Error: problem with file '{file_path}'.")
-        exit(-2)
+#     file_size_bytes = 0
+#     try:
+#         file_size_bytes = os.path.getsize(file_path)
+#     except:
+#         print(f"Error: problem with file '{file_path}'.")
+#         exit(-2)
 
-    return file_size_bytes
+#     return file_size_bytes
 # ---
 
 
@@ -75,20 +76,6 @@ def current_time():
     '''
     return dt.now().strftime("%Y%m%d%H%M%S")
 
-
-###################################################################################
-class Monitor(): # possibly to be implemented later
-    ''' The Monitor class is used to record the time series of the parameters of choice,
-        as the simulation is progressing through time steps.
-        NB. Work in progress, to be implemented yet.
-    '''
-
-    def __init__(self, size=0):
-        '''
-        Initialize arrays for time series type of data
-        '''
-
-        self.buffer = np.zeros(size, dtype=float) # Current data volume in the buffer
 
 ###################################################################################
 class DAQ:
@@ -108,8 +95,6 @@ class DAQ:
                  factor=1.0,
                  low=1.0,
                  high=2.0,
-                 sender=None,
-                 receiver=None,
                  verbose=False,
                  test=False):
         
@@ -126,11 +111,9 @@ class DAQ:
         self.factor     = factor        # real-time scaling factor
         self.low        = low           # low limit on the STF prod time
         self.high       = high          # high limit on same
-        self.points     = []            # state switch points
+        self.points     = []            # state switch points on the time axis, to be filled later
         self.end        = 0.0           # will be updated -- the last of the points
-        self.Nstf       = 0             # counter of the generated STFs
-        self.sender     = sender        # the MQ sender, if any
-        self.receiver   = receiver      # the MQ receiver, if any
+        self.Nstf       = 0             # the counter of the generated STFs
         self.env        = None          # the SimPy environment, to be created later
         self.run_id     = ''            # to be filled later, the run name/number etc
         self.dataset    = ''            # to be filled later, based on the run number
@@ -156,14 +139,69 @@ class DAQ:
 
             self.api_session.verify = False
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-            # Send initial registration/heartbeat
-            self.send_heartbeat()        
+            # Send initial registration/heartbeat: self.send_heartbeat()        
+        
+            agent_id = self.get_next_agent_id()
+        
+            import getpass
+            username = getpass.getuser()
+            agent_id = self.get_next_agent_id()
+            self.agent_name = f"daq-agent-{username}-{agent_id}"
+                
+            print(f'''*** The agent name is {self.agent_name} ***''')
         
         self.read_schedule()            # read the schedule from the YAML file
+        self.init_mq()                  # initialize the MQ sender and receiver
 
+    # ---
+    def init_mq(self):
+        ''' Initialize the MQ receiver to get messages from the DAQ simulator.
+        '''
+        try:
+            from mq_comms import Sender, Receiver
+        except:
+            if self.verbose: print('*** Failed to import the Sender and Receiver from comms, exiting...***')
+            exit(-1)
+
+        try:
+            self.sender = Sender(verbose=self.verbose)
+            if self.verbose: print(f'''*** Successfully instantiated the Sender ***''')
+            self.sender.connect()
+            if self.verbose: print(f'''*** Successfully connected the Sender to MQ ***''')
+        except:
+            print('*** Failed to instantiate the Sender, exiting...***')
+            exit(-1)
+
+        try:
+            self.receiver = Receiver(verbose=self.verbose, client_id="daq", processor=self.on_message) # a function to process received messages
+            self.receiver.connect()
+            if self.verbose: print(f'''*** Successfully instantiated and connected the Receiver, will receive messages from MQ ***''')
+        except:
+            print('*** Failed to instantiate the Receiver, exiting...***')
+            exit(-1)
+
+    # ---
+    def on_message(self, msg):
+        """
+        Handles incoming messages.
+        """
+
+        try:
+            message_data = json.loads(msg)
+            # Will add later -
+            # msg_type = message_data.get('msg_type')
+            # print(f'=============================> {msg_type}')
+            # if msg_type == 'control':
+            #     self.handle_control_message(message_data)
+            # else:
+            #     print("Ignoring unknown message type", msg_type)
+        except Exception as e:
+            print(f"CRITICAL: Message processing failed - {str(e)}")
+
+    # ---
     def get_next_agent_id(self):
         """Get the next agent ID from persistent state API."""
-        return get_next_agent_id(self.monitor_url, self.api)
+        return get_next_agent_id(self.monitor_url, self.api_session, logger=None)
     
     # ---
     def read_schedule(self):
@@ -347,22 +385,23 @@ class DAQ:
                 "workflow_enabled": False  # Enable this agent for workflow tracking
             }
 
-            print(f"[HEARTBEAT] Sending heartbeat for {self.agent_name} to {self.monitor_url}/api/systemagents/heartbeat/")
-            print(f"[HEARTBEAT] Payload: {payload}")
+            # print(f"[HEARTBEAT] Sending heartbeat for {self.agent_name} to {self.monitor_url}/api/systemagents/heartbeat/")
+            # print(f"[HEARTBEAT] Payload: {payload}")
             
             url = f"{self.monitor_url}/api/systemagents/heartbeat/"
             response = self.api_session.post(url, json=payload, timeout=10)
             response.raise_for_status()
             
-            print(f"[HEARTBEAT] SUCCESS: Status {response.status_code}")
+            if self.verbose:
+                print(f"*** [HEARTBEAT] SUCCESS: Status {response.status_code} ***")
         except Exception as e:
             print(f"Warning: failure sending heartbeat: {e}")
             return
         
         data = response.json()
-        if 'status' in data and data['status'] == 'ok':
+        if 'status' in data and data['status'] == 'OK':
             if self.verbose:
-                print(f"Heartbeat sent successfully for run {self.run_id}")
+                print(f"*** Heartbeat sent successfully for run {self.run_id} ***")
         else:
             print(f"Warning: unexpected response from heartbeat: {data}")
             return
@@ -413,7 +452,7 @@ class DAQ:
             if self.verbose: print(f'''*** Created the output folder {self.folder} ***''')
         
 
-        if self.sender:
+        if self.sender and not self.test:
             self.sender.send(destination='epictopic', body=self.mq_run_imminent_message(), headers={'persistent': 'true'})
             if self.verbose: print(f'''*** Sent MQ message that run {str(self.run_id)} is imminent ***''')
 
@@ -425,7 +464,7 @@ class DAQ:
         self.env.process(self.sched())          # the schedule minder
         self.env.process(self.stf_generator())  # the DAQ payload to process in each step
         
-        if self.sender:
+        if self.sender and not self.test:
             self.sender.send(destination='epictopic', body=self.mq_start_run_message(), headers={'persistent': 'true'})
             if self.verbose: print(f'''*** Sent MQ message for start of run {str(self.run_id)} ***''')
     
@@ -433,12 +472,13 @@ class DAQ:
             # Send heartbeat
             self.send_heartbeat()
     
+    # ---
     def end_run(self):
         '''
         End the simulation run, clean up resources and print the summary.
         This method is called to finalize the simulation and print the results.
         '''
-        if self.sender:
+        if self.sender and not self.test:
             self.sender.send(destination='epictopic', body=self.mq_end_run_message(), headers={'persistent': 'true'})
             if self.verbose: print(f'''*** Sent MQ message for end of run {str(self.run_id)} ***''')
     
@@ -450,9 +490,9 @@ class DAQ:
             # Send heartbeat
             self.send_heartbeat()
     
+    # ---
     def run(self):
         self.start_run()  # Initialize the simulation environment and processes
-        
         try:
             self.env.run(until=self.until)
         except KeyboardInterrupt:
@@ -508,15 +548,14 @@ class DAQ:
             self.define_filename() # define the filename for the current STF
 
             build_start = dt.now() # .strftime("%Y%m%d%H%M%S")
-            stf_arrival = random.uniform(self.low, self.high)   # Time for next STF (random interval between the low/high limits)
+            stf_arrival = random.uniform(self.low, self.high)   # Time for next STF (random interval [low,high])
             interval    = datetime.timedelta(seconds=stf_arrival)
             build_end   = build_start+interval
 
             md = self.metadata(build_start, build_end)
 
-            # This is provisionl until we have a real STF file to write
-            # For now, we just create a JSON message with the metadata
-            # and send it to the message queue, if the sender is initialized
+            # This is provisionl until we have a real STF file to write. For now, we just create
+            # a JSON message with the metadata and send it to the message queue, if the sender is initialized
             data = json.dumps(md)
             
             if self.destination:
@@ -536,7 +575,7 @@ class DAQ:
             md['checksum']  = f'''ad:{str(adler)}'''  # Adler-32 checksum
             md['size']      = size
         
-            if self.sender:
+            if self.sender and not self.test:
                 self.sender.send(destination='epictopic', body=self.mq_stf_message(md), headers={'persistent': 'true'})
                 if self.verbose: print(f'''*** Sent MQ message for STF {self.filename} ***''')
 
@@ -561,3 +600,16 @@ class DAQ:
 # formatted_date = build_end.strftime("%Y%m%d")             # ("%Y-%m-%d %H:%M:%S")
 # formatted_time = build_end.strftime("%H%M%S")
 # formatted_us   = build_end.strftime("%f")
+###################################################################################
+# class Monitor(): # possibly to be implemented later
+#     ''' The Monitor class is used to record the time series of the parameters of choice,
+#         as the simulation is progressing through time steps.
+#         NB. Work in progress, to be implemented yet.
+#     '''
+
+#     def __init__(self, size=0):
+#         '''
+#         Initialize arrays for time series type of data
+#         '''
+
+#         self.buffer = np.zeros(size, dtype=float) # Current data volume in the buffer

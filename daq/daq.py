@@ -12,7 +12,7 @@ import simpy, yaml, random, json, bisect, zlib, os, requests, random, urllib3
 import datetime
 from   datetime import datetime as dt
 
-from api_utils import get_next_run_number  # to get the next run number from the run monitor (common)
+from api_utils import get_next_run_number, get_next_agent_id  # to get the next run number from the run monitor (common)
 # ---
 timeformat = "%Y%m%d%H%M%S%f"  # Format for the STF start and end times in metadata
 
@@ -161,6 +161,10 @@ class DAQ:
         
         self.read_schedule()            # read the schedule from the YAML file
 
+    def get_next_agent_id(self):
+        """Get the next agent ID from persistent state API."""
+        return get_next_agent_id(self.monitor_url, self.api)
+    
     # ---
     def read_schedule(self):
         try:

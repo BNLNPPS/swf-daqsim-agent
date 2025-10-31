@@ -403,10 +403,10 @@ class DAQ:
                 os.makedirs(self.folder, exist_ok=True)
             except:
                 if self.verbose:
-                    print(f"*** Error: could not create the output folder {self.destination}/run_{self.run_id}, exiting... ***")
+                    print(f"*** Error: could not create the output folder {self.folder}, exiting... ***")
                 exit(-1)
             
-            if self.verbose: print(f'''*** Created the output folder {self.destination}/run_{self.run_id} ***''')
+            if self.verbose: print(f'''*** Created the output folder {self.folder} ***''')
         
 
         if self.sender:

@@ -18,57 +18,6 @@ from api_utils import get_next_run_number, get_next_agent_id  # to get the next 
 timeformat = "%Y%m%d%H%M%S%f"  # Format for the STF start and end times in metadata
 
 # ---
-# def calculate_adler32_from_file(file_path, chunk_size=4096):
-    # """
-    # Calculates the Adler-32 checksum of a file.
-
-    # Args:
-    #     filepath (str): The path to the file.
-    #     chunk_size (int): The size of chunks to read from the file.
-
-    # Returns:
-    #     int: The Adler-32 checksum of the file.
-    # """
-    # adler32_checksum = 1  # Initial Adler-32 value
-
-    # try:
-    #     with open(file_path, 'rb') as f:
-    #         while True:
-    #             chunk = f.read(chunk_size)
-    #             if not chunk:
-    #                 break
-    #             adler32_checksum = zlib.adler32(chunk, adler32_checksum)
-    #     return adler32_checksum & 0xffffffff  # Ensure 32-bit unsigned result
-    # except:
-    #     print(f"Problem with file {file_path}")
-    #     exit(-2)
-
-
-# ---
-# def get_file_size(file_path):
-#     """
-#     Returns the size of the file at the given path in bytes.
-    
-#     Args:
-#         file_path (str): The path to the file.
-    
-#     Returns:
-#         int: The size of the file in bytes, or None if the file does not exist.
-#     """
-
-#     file_size_bytes = 0
-#     try:
-#         file_size_bytes = os.path.getsize(file_path)
-#     except:
-#         print(f"Error: problem with file '{file_path}'.")
-#         exit(-2)
-
-#     return file_size_bytes
-# ---
-
-
-
-# ---
 def current_time():
     '''
     Returns the current time in a specific format to generate run id.

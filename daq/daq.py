@@ -173,8 +173,8 @@ class DAQ:
             exit(-1)
 
         try:
-            self.receiver = Receiver(verbose=self.verbose, client_id="daq", processor=self.on_message) # a function to process received messages
-            self.receiver.connect()
+            # self.receiver = Receiver(verbose=self.verbose, client_id="daq", processor=self.on_message) # a function to process received messages
+            # self.receiver.connect()
             if self.verbose: print(f'''*** Successfully instantiated and connected the Receiver, will receive messages from MQ ***''')
         except:
             print('*** Failed to instantiate the Receiver, exiting...***')

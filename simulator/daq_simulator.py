@@ -48,6 +48,7 @@ high        = args.high
 
 # ---
 
+
 if verbose: print('*** Setting up environment variables for the DAQ simulator... ***')
 SWF_COMMON_LIB_PATH = ''
 # DAQSIM_PATH         = ''
@@ -79,20 +80,8 @@ if top_directory not in sys.path:
 else:
     if verbose: print(f'''*** {top_directory} is already in sys.path ***''')
 
-# try:
-#     DAQSIM_PATH=os.environ['DAQSIM_PATH']
-#     if verbose: print(f'''*** The DAQSIM_PATH is defined in the environment: {DAQSIM_PATH}, will be added to sys.path ***''')
-#     sys.path.append(DAQSIM_PATH)
-# except:
-#     if verbose: print('*** The variable DAQSIM_PATH is undefined, will rely on PYTHONPATH and ../ ***')
-#     DAQSIM_PATH = '../'  # Add parent to path, to enable running locally (also for data)
-#     sys.path.append(DAQSIM_PATH)
         
-        
-if verbose: print('*** Environment variables for the DAQ simulator are set up. ***')
-
-
-
+if verbose:         print('*** Environment variables for the DAQ simulator are set up. ***')
 if schedule=='':    schedule    = DAQSIM_PATH + "/config/schedule-rt.yml"
 
 if verbose:
